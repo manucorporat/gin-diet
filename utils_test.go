@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func init() {
@@ -51,12 +51,12 @@ func TestWrap(t *testing.T) {
 func TestLastChar(t *testing.T) {
 	assert.Equal(t, uint8('a'), lastChar("hola"))
 	assert.Equal(t, uint8('s'), lastChar("adios"))
-	assert.Panics(t, func() { lastChar("") })
+	Panics(t, func() { lastChar("") })
 }
 
 func TestParseAccept(t *testing.T) {
 	parts := parseAccept("text/html , application/xhtml+xml,application/xml;q=0.9,  */* ;q=0.8")
-	assert.Len(t, parts, 4)
+	assert.Equal(t, len(parts), 4)
 	assert.Equal(t, "text/html", parts[0])
 	assert.Equal(t, "application/xhtml+xml", parts[1])
 	assert.Equal(t, "application/xml", parts[2])
@@ -68,7 +68,7 @@ func TestChooseData(t *testing.T) {
 	B := "b"
 	assert.Equal(t, A, chooseData(A, B))
 	assert.Equal(t, B, chooseData(nil, B))
-	assert.Panics(t, func() { chooseData(nil, nil) })
+	Panics(t, func() { chooseData(nil, nil) })
 }
 
 func TestFilterFlags(t *testing.T) {
@@ -80,7 +80,7 @@ func TestFilterFlags(t *testing.T) {
 }
 
 func TestFunctionName(t *testing.T) {
-	assert.Regexp(t, `^(.*/vendor/)?github.com/manucorporat/gin-diet.somefunction$`, nameOfFunction(somefunction))
+	assert.MatchRegex(t, `^(.*/vendor/)?github.com/manucorporat/gin-diet.somefunction$`, nameOfFunction(somefunction))
 }
 
 func somefunction() {
@@ -114,15 +114,15 @@ func TestBindMiddleware(t *testing.T) {
 		value = c.MustGet(BindKey).(*bindTestStruct)
 	})
 	performRequest(router, "GET", "/?foo=hola&bar=10")
-	assert.True(t, called)
+	assert.Equal(t, true, called)
 	assert.Equal(t, "hola", value.Foo)
 	assert.Equal(t, 10, value.Bar)
 
 	called = false
 	performRequest(router, "GET", "/?foo=hola&bar=1")
-	assert.False(t, called)
+	assert.Equal(t, true, called)
 
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		Bind(&bindTestStruct{})
 	})
 }
@@ -135,5 +135,5 @@ func TestMarshalXMLforH(t *testing.T) {
 	enc := xml.NewEncoder(&b)
 	var x xml.StartElement
 	e := h.MarshalXML(enc, x)
-	assert.Error(t, e)
+	assert.NotEqual(t, nil, e)
 }

@@ -21,16 +21,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-playground/assert"
 	"github.com/manucorporat/gin-diet/binding"
-	"github.com/manucorporat/gin-diet/binding/validator"
-	"github.com/stretchr/testify/assert"
 )
 
 var _ context.Context = &Context{}
-
-func init() {
-	binding.SetValidator(validator.New())
-}
 
 // Unit tests TODO
 // func (c *Context) File(filepath string) {
@@ -72,20 +67,19 @@ func TestContextFormFile(t *testing.T) {
 	buf := new(bytes.Buffer)
 	mw := multipart.NewWriter(buf)
 	w, err := mw.CreateFormFile("file", "test")
-	if assert.NoError(t, err) {
-		_, err = w.Write([]byte("test"))
-		assert.NoError(t, err)
-	}
+	assert.Equal(t, err, nil)
+	_, err = w.Write([]byte("test"))
+	assert.Equal(t, err, nil)
+
 	mw.Close()
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("POST", "/", buf)
 	c.Request.Header.Set("Content-Type", mw.FormDataContentType())
 	f, err := c.FormFile("file")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "test", f.Filename)
-	}
+	assert.Equal(t, err, nil)
+	assert.Equal(t, "test", f.Filename)
 
-	assert.NoError(t, c.SaveUploadedFile(f, "test"))
+	assert.Equal(t, c.SaveUploadedFile(f, "test"), nil)
 }
 
 func TestContextFormFileFailed(t *testing.T) {
@@ -97,29 +91,28 @@ func TestContextFormFileFailed(t *testing.T) {
 	c.Request.Header.Set("Content-Type", mw.FormDataContentType())
 	c.engine.MaxMultipartMemory = 8 << 20
 	f, err := c.FormFile("file")
-	assert.Error(t, err)
-	assert.Nil(t, f)
+	assert.NotEqual(t, nil, err)
+	assert.Equal(t, f, nil)
 }
 
 func TestContextMultipartForm(t *testing.T) {
 	buf := new(bytes.Buffer)
 	mw := multipart.NewWriter(buf)
-	assert.NoError(t, mw.WriteField("foo", "bar"))
+	assert.Equal(t, mw.WriteField("foo", "bar"), nil)
 	w, err := mw.CreateFormFile("file", "test")
-	if assert.NoError(t, err) {
-		_, err = w.Write([]byte("test"))
-		assert.NoError(t, err)
-	}
+	assert.Equal(t, err, nil)
+	_, err = w.Write([]byte("test"))
+	assert.Equal(t, err, nil)
+
 	mw.Close()
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("POST", "/", buf)
 	c.Request.Header.Set("Content-Type", mw.FormDataContentType())
 	f, err := c.MultipartForm()
-	if assert.NoError(t, err) {
-		assert.NotNil(t, f)
-	}
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, f, nil)
 
-	assert.NoError(t, c.SaveUploadedFile(f.File["file"][0], "test"))
+	assert.Equal(t, c.SaveUploadedFile(f.File["file"][0], "test"), nil)
 }
 
 func TestSaveUploadedOpenFailed(t *testing.T) {
@@ -134,33 +127,31 @@ func TestSaveUploadedOpenFailed(t *testing.T) {
 	f := &multipart.FileHeader{
 		Filename: "file",
 	}
-	assert.Error(t, c.SaveUploadedFile(f, "test"))
+	assert.NotEqual(t, c.SaveUploadedFile(f, "test"), nil)
 }
 
 func TestSaveUploadedCreateFailed(t *testing.T) {
 	buf := new(bytes.Buffer)
 	mw := multipart.NewWriter(buf)
 	w, err := mw.CreateFormFile("file", "test")
-	if assert.NoError(t, err) {
-		_, err = w.Write([]byte("test"))
-		assert.NoError(t, err)
-	}
+	assert.Equal(t, err, nil)
+	_, err = w.Write([]byte("test"))
+	assert.Equal(t, err, nil)
 	mw.Close()
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("POST", "/", buf)
 	c.Request.Header.Set("Content-Type", mw.FormDataContentType())
 	f, err := c.FormFile("file")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "test", f.Filename)
-	}
+	assert.Equal(t, err, nil)
+	assert.Equal(t, "test", f.Filename)
 
-	assert.Error(t, c.SaveUploadedFile(f, "/"))
+	assert.NotEqual(t, c.SaveUploadedFile(f, "/"), nil)
 }
 
 func TestContextReset(t *testing.T) {
 	router := New()
 	c := router.allocateContext()
-	assert.Equal(t, c.engine, router)
+	assert.Equal(t, c.engine == router, true)
 
 	c.index = 2
 	c.Writer = &responseWriter{ResponseWriter: httptest.NewRecorder()}
@@ -169,25 +160,25 @@ func TestContextReset(t *testing.T) {
 	c.Set("foo", "bar")
 	c.reset()
 
-	assert.False(t, c.IsAborted())
-	assert.Nil(t, c.Keys)
-	assert.Nil(t, c.Accepted)
-	assert.Len(t, c.Errors, 0)
-	assert.Empty(t, c.Errors.Errors())
-	assert.Empty(t, c.Errors.ByType(ErrorTypeAny))
-	assert.Len(t, c.Params, 0)
-	assert.EqualValues(t, c.index, -1)
+	assert.Equal(t, c.IsAborted(), false)
+	assert.Equal(t, c.Keys, nil)
+	assert.Equal(t, c.Accepted, nil)
+	assert.Equal(t, len(c.Errors), 0)
+	assert.Equal(t, len(c.Errors.Errors()), 0)
+	assert.Equal(t, len(c.Errors.ByType(ErrorTypeAny)), 0)
+	assert.Equal(t, len(c.Params), 0)
+	assert.Equal(t, c.index == -1, true)
 	assert.Equal(t, c.Writer.(*responseWriter), &c.writermem)
 }
 
 func TestContextHandlers(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
-	assert.Nil(t, c.handlers)
-	assert.Nil(t, c.handlers.Last())
+	assert.Equal(t, c.handlers, nil)
+	assert.Equal(t, c.handlers.Last(), nil)
 
 	c.handlers = HandlersChain{}
-	assert.NotNil(t, c.handlers)
-	assert.Nil(t, c.handlers.Last())
+	assert.NotEqual(t, c.handlers, nil)
+	assert.Equal(t, c.handlers.Last(), nil)
 
 	f := func(c *Context) {}
 	g := func(c *Context) {}
@@ -207,14 +198,14 @@ func TestContextSetGet(t *testing.T) {
 
 	value, err := c.Get("foo")
 	assert.Equal(t, "bar", value)
-	assert.True(t, err)
+	assert.Equal(t, err, true)
 
 	value, err = c.Get("foo2")
-	assert.Nil(t, value)
-	assert.False(t, err)
+	assert.Equal(t, value, nil)
+	assert.Equal(t, err, false)
 
 	assert.Equal(t, "bar", c.MustGet("foo"))
-	assert.Panics(t, func() { c.MustGet("no_exist") })
+	Panics(t, func() { c.MustGet("no_exist") })
 }
 
 func TestContextSetGetValues(t *testing.T) {
@@ -228,13 +219,13 @@ func TestContextSetGetValues(t *testing.T) {
 	var a interface{} = 1
 	c.Set("intInterface", a)
 
-	assert.Exactly(t, c.MustGet("string").(string), "this is a string")
-	assert.Exactly(t, c.MustGet("int32").(int32), int32(-42))
-	assert.Exactly(t, c.MustGet("int64").(int64), int64(42424242424242))
-	assert.Exactly(t, c.MustGet("uint64").(uint64), uint64(42))
-	assert.Exactly(t, c.MustGet("float32").(float32), float32(4.2))
-	assert.Exactly(t, c.MustGet("float64").(float64), 4.2)
-	assert.Exactly(t, c.MustGet("intInterface").(int), 1)
+	assert.Equal(t, c.MustGet("string").(string), "this is a string")
+	assert.Equal(t, c.MustGet("int32").(int32), int32(-42))
+	assert.Equal(t, c.MustGet("int64").(int64), int64(42424242424242))
+	assert.Equal(t, c.MustGet("uint64").(uint64), uint64(42))
+	assert.Equal(t, c.MustGet("float32").(float32), float32(4.2))
+	assert.Equal(t, c.MustGet("float64").(float64), 4.2)
+	assert.Equal(t, c.MustGet("intInterface").(int), 1)
 
 }
 
@@ -247,7 +238,7 @@ func TestContextGetString(t *testing.T) {
 func TestContextSetGetBool(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.Set("bool", true)
-	assert.True(t, c.GetBool("bool"))
+	assert.Equal(t, c.GetBool("bool"), true)
 }
 
 func TestContextGetInt(t *testing.T) {
@@ -326,23 +317,23 @@ func TestContextCopy(t *testing.T) {
 	c.Set("foo", "bar")
 
 	cp := c.Copy()
-	assert.Nil(t, cp.handlers)
-	assert.Nil(t, cp.writermem.ResponseWriter)
+	assert.Equal(t, cp.handlers, nil)
+	assert.Equal(t, cp.writermem.ResponseWriter, nil)
 	assert.Equal(t, &cp.writermem, cp.Writer.(*responseWriter))
 	assert.Equal(t, cp.Request, c.Request)
 	assert.Equal(t, cp.index, abortIndex)
 	assert.Equal(t, cp.Keys, c.Keys)
-	assert.Equal(t, cp.engine, c.engine)
+	assert.Equal(t, cp.engine == c.engine, true)
 	assert.Equal(t, cp.Params, c.Params)
 	cp.Set("foo", "notBar")
-	assert.False(t, cp.Keys["foo"] == c.Keys["foo"])
+	assert.Equal(t, cp.Keys["foo"] == c.Keys["foo"], false)
 }
 
 func TestContextHandlerName(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.handlers = HandlersChain{func(c *Context) {}, handlerNameTest}
 
-	assert.Regexp(t, "^(.*/vendor/)?github.com/manucorporat/gin-diet.handlerNameTest$", c.HandlerName())
+	assert.MatchRegex(t, "^(.*/vendor/)?github.com/manucorporat/gin-diet.handlerNameTest$", c.HandlerName())
 }
 
 func TestContextHandlerNames(t *testing.T) {
@@ -351,9 +342,9 @@ func TestContextHandlerNames(t *testing.T) {
 
 	names := c.HandlerNames()
 
-	assert.True(t, len(names) == 4)
+	assert.Equal(t, len(names), 4)
 	for _, name := range names {
-		assert.Regexp(t, `^(.*/vendor/)?(github\.com/manucorporat/gin-diet\.){1}(TestContextHandlerNames\.func.*){0,1}(handlerNameTest.*){0,1}`, name)
+		assert.MatchRegex(t, name, `^(.*/vendor/)?(github\.com/manucorporat/gin-diet\.){1}(TestContextHandlerNames\.func.*){0,1}(handlerNameTest.*){0,1}`)
 	}
 }
 
@@ -381,34 +372,34 @@ func TestContextQuery(t *testing.T) {
 	c.Request, _ = http.NewRequest("GET", "http://example.com/?foo=bar&page=10&id=", nil)
 
 	value, ok := c.GetQuery("foo")
-	assert.True(t, ok)
+	assert.Equal(t, ok, true)
 	assert.Equal(t, "bar", value)
 	assert.Equal(t, "bar", c.DefaultQuery("foo", "none"))
 	assert.Equal(t, "bar", c.Query("foo"))
 
 	value, ok = c.GetQuery("page")
-	assert.True(t, ok)
+	assert.Equal(t, ok, true)
 	assert.Equal(t, "10", value)
 	assert.Equal(t, "10", c.DefaultQuery("page", "0"))
 	assert.Equal(t, "10", c.Query("page"))
 
 	value, ok = c.GetQuery("id")
-	assert.True(t, ok)
-	assert.Empty(t, value)
-	assert.Empty(t, c.DefaultQuery("id", "nada"))
-	assert.Empty(t, c.Query("id"))
+	assert.Equal(t, ok, true)
+	assert.Equal(t, len(value), 0)
+	assert.Equal(t, len(c.DefaultQuery("id", "nada")), 0)
+	assert.Equal(t, len(c.Query("id")), 0)
 
 	value, ok = c.GetQuery("NoKey")
-	assert.False(t, ok)
-	assert.Empty(t, value)
+	assert.Equal(t, ok, false)
+	assert.Equal(t, len(value), 0)
 	assert.Equal(t, "nada", c.DefaultQuery("NoKey", "nada"))
-	assert.Empty(t, c.Query("NoKey"))
+	assert.Equal(t, len(c.Query("NoKey")), 0)
 
 	// postform should not mess
 	value, ok = c.GetPostForm("page")
-	assert.False(t, ok)
-	assert.Empty(t, value)
-	assert.Empty(t, c.PostForm("foo"))
+	assert.Equal(t, ok, false)
+	assert.Equal(t, len(value), 0)
+	assert.Equal(t, len(c.PostForm("foo")), 0)
 }
 
 func TestContextQueryAndPostForm(t *testing.T) {
@@ -420,39 +411,39 @@ func TestContextQueryAndPostForm(t *testing.T) {
 
 	assert.Equal(t, "bar", c.DefaultPostForm("foo", "none"))
 	assert.Equal(t, "bar", c.PostForm("foo"))
-	assert.Empty(t, c.Query("foo"))
+	assert.Equal(t, len(c.Query("foo")), 0)
 
 	value, ok := c.GetPostForm("page")
-	assert.True(t, ok)
+	assert.Equal(t, ok, true)
 	assert.Equal(t, "11", value)
 	assert.Equal(t, "11", c.DefaultPostForm("page", "0"))
 	assert.Equal(t, "11", c.PostForm("page"))
-	assert.Empty(t, c.Query("page"))
+	assert.Equal(t, len(c.Query("page")), 0)
 
 	value, ok = c.GetPostForm("both")
-	assert.True(t, ok)
-	assert.Empty(t, value)
-	assert.Empty(t, c.PostForm("both"))
-	assert.Empty(t, c.DefaultPostForm("both", "nothing"))
-	assert.Equal(t, "GET", c.Query("both"), "GET")
+	assert.Equal(t, ok, true)
+	assert.Equal(t, len(value), 0)
+	assert.Equal(t, len(c.PostForm("both")), 0)
+	assert.Equal(t, len(c.DefaultPostForm("both", "nothing")), 0)
+	assert.Equal(t, "GET", c.Query("both"))
 
 	value, ok = c.GetQuery("id")
-	assert.True(t, ok)
+	assert.Equal(t, ok, true)
 	assert.Equal(t, "main", value)
 	assert.Equal(t, "000", c.DefaultPostForm("id", "000"))
 	assert.Equal(t, "main", c.Query("id"))
-	assert.Empty(t, c.PostForm("id"))
+	assert.Equal(t, len(c.PostForm("id")), 0)
 
 	value, ok = c.GetQuery("NoKey")
-	assert.False(t, ok)
-	assert.Empty(t, value)
+	assert.Equal(t, ok, false)
+	assert.Equal(t, len(value), 0)
 	value, ok = c.GetPostForm("NoKey")
-	assert.False(t, ok)
-	assert.Empty(t, value)
+	assert.Equal(t, ok, false)
+	assert.Equal(t, len(value), 0)
 	assert.Equal(t, "nada", c.DefaultPostForm("NoKey", "nada"))
 	assert.Equal(t, "nothing", c.DefaultQuery("NoKey", "nothing"))
-	assert.Empty(t, c.PostForm("NoKey"))
-	assert.Empty(t, c.Query("NoKey"))
+	assert.Equal(t, len(c.PostForm("NoKey")), 0)
+	assert.Equal(t, len(c.Query("NoKey")), 0)
 
 	var obj struct {
 		Foo   string   `form:"foo"`
@@ -461,15 +452,15 @@ func TestContextQueryAndPostForm(t *testing.T) {
 		Both  string   `form:"both"`
 		Array []string `form:"array[]"`
 	}
-	assert.NoError(t, c.Bind(&obj))
-	assert.Equal(t, "bar", obj.Foo, "bar")
-	assert.Equal(t, "main", obj.ID, "main")
-	assert.Equal(t, 11, obj.Page, 11)
-	assert.Empty(t, obj.Both)
+	assert.Equal(t, nil, c.Bind(&obj))
+	assert.Equal(t, "bar", obj.Foo)
+	assert.Equal(t, "main", obj.ID)
+	assert.Equal(t, 11, obj.Page)
+	assert.Equal(t, 0, len(obj.Both))
 	assert.Equal(t, []string{"first", "second"}, obj.Array)
 
 	values, ok := c.GetQueryArray("array[]")
-	assert.True(t, ok)
+	assert.Equal(t, true, ok)
 	assert.Equal(t, "first", values[0])
 	assert.Equal(t, "second", values[1])
 
@@ -485,20 +476,20 @@ func TestContextQueryAndPostForm(t *testing.T) {
 	assert.Equal(t, "GET", values[0])
 
 	dicts, ok := c.GetQueryMap("ids")
-	assert.True(t, ok)
+	assert.Equal(t, true, ok)
 	assert.Equal(t, "hi", dicts["a"])
 	assert.Equal(t, "3.14", dicts["b"])
 
 	dicts, ok = c.GetQueryMap("nokey")
-	assert.False(t, ok)
+	assert.Equal(t, false, ok)
 	assert.Equal(t, 0, len(dicts))
 
 	dicts, ok = c.GetQueryMap("both")
-	assert.False(t, ok)
+	assert.Equal(t, false, ok)
 	assert.Equal(t, 0, len(dicts))
 
 	dicts, ok = c.GetQueryMap("array")
-	assert.False(t, ok)
+	assert.Equal(t, false, ok)
 	assert.Equal(t, 0, len(dicts))
 
 	dicts = c.QueryMap("ids")
@@ -524,12 +515,12 @@ func TestContextPostFormMultipart(t *testing.T) {
 		TimeLocation time.Time `form:"time_location" time_format:"02/01/2006 15:04" time_location:"Asia/Tokyo"`
 		BlankTime    time.Time `form:"blank_time" time_format:"02/01/2006 15:04"`
 	}
-	assert.NoError(t, c.Bind(&obj))
+	assert.Equal(t, nil, c.Bind(&obj))
 	assert.Equal(t, "bar", obj.Foo)
 	assert.Equal(t, "10", obj.Bar)
 	assert.Equal(t, 10, obj.BarAsInt)
 	assert.Equal(t, []string{"first", "second"}, obj.Array)
-	assert.Empty(t, obj.ID)
+	assert.Equal(t, 0, len(obj.ID))
 	assert.Equal(t, "31/12/2016 14:55", obj.TimeLocal.Format("02/01/2006 15:04"))
 	assert.Equal(t, time.Local, obj.TimeLocal.Location())
 	assert.Equal(t, "31/12/2016 14:55", obj.TimeUTC.Format("02/01/2006 15:04"))
@@ -537,39 +528,39 @@ func TestContextPostFormMultipart(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Tokyo")
 	assert.Equal(t, "31/12/2016 14:55", obj.TimeLocation.Format("02/01/2006 15:04"))
 	assert.Equal(t, loc, obj.TimeLocation.Location())
-	assert.True(t, obj.BlankTime.IsZero())
+	assert.Equal(t, true, obj.BlankTime.IsZero())
 
 	value, ok := c.GetQuery("foo")
-	assert.False(t, ok)
-	assert.Empty(t, value)
-	assert.Empty(t, c.Query("bar"))
+	assert.Equal(t, false, ok)
+	assert.Equal(t, 0, len(value))
+	assert.Equal(t, 0, len(c.Query("bar")))
 	assert.Equal(t, "nothing", c.DefaultQuery("id", "nothing"))
 
 	value, ok = c.GetPostForm("foo")
-	assert.True(t, ok)
+	assert.Equal(t, true, ok)
 	assert.Equal(t, "bar", value)
 	assert.Equal(t, "bar", c.PostForm("foo"))
 
 	value, ok = c.GetPostForm("array")
-	assert.True(t, ok)
+	assert.Equal(t, true, ok)
 	assert.Equal(t, "first", value)
 	assert.Equal(t, "first", c.PostForm("array"))
 
 	assert.Equal(t, "10", c.DefaultPostForm("bar", "nothing"))
 
 	value, ok = c.GetPostForm("id")
-	assert.True(t, ok)
-	assert.Empty(t, value)
-	assert.Empty(t, c.PostForm("id"))
-	assert.Empty(t, c.DefaultPostForm("id", "nothing"))
+	assert.Equal(t, true, ok)
+	assert.Equal(t, 0, len(value))
+	assert.Equal(t, 0, len(c.PostForm("id")))
+	assert.Equal(t, 0, len(c.DefaultPostForm("id", "nothing")))
 
 	value, ok = c.GetPostForm("nokey")
-	assert.False(t, ok)
-	assert.Empty(t, value)
+	assert.Equal(t, false, ok)
+	assert.Equal(t, 0, len(value))
 	assert.Equal(t, "nothing", c.DefaultPostForm("nokey", "nothing"))
 
 	values, ok := c.GetPostFormArray("array")
-	assert.True(t, ok)
+	assert.Equal(t, true, ok)
 	assert.Equal(t, "first", values[0])
 	assert.Equal(t, "second", values[1])
 
@@ -585,12 +576,12 @@ func TestContextPostFormMultipart(t *testing.T) {
 	assert.Equal(t, "bar", values[0])
 
 	dicts, ok := c.GetPostFormMap("names")
-	assert.True(t, ok)
+	assert.Equal(t, true, ok)
 	assert.Equal(t, "thinkerou", dicts["a"])
 	assert.Equal(t, "tianou", dicts["b"])
 
 	dicts, ok = c.GetPostFormMap("nokey")
-	assert.False(t, ok)
+	assert.Equal(t, false, ok)
 	assert.Equal(t, 0, len(dicts))
 
 	dicts = c.PostFormMap("names")
@@ -623,14 +614,14 @@ func TestContextGetCookie(t *testing.T) {
 	assert.Equal(t, "gin", cookie)
 
 	_, err := c.Cookie("nokey")
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 }
 
 func TestContextBodyAllowedForStatus(t *testing.T) {
-	assert.False(t, false, bodyAllowedForStatus(http.StatusProcessing))
-	assert.False(t, false, bodyAllowedForStatus(http.StatusNoContent))
-	assert.False(t, false, bodyAllowedForStatus(http.StatusNotModified))
-	assert.True(t, true, bodyAllowedForStatus(http.StatusInternalServerError))
+	assert.Equal(t, false, bodyAllowedForStatus(http.StatusProcessing))
+	assert.Equal(t, false, bodyAllowedForStatus(http.StatusNoContent))
+	assert.Equal(t, false, bodyAllowedForStatus(http.StatusNotModified))
+	assert.Equal(t, true, bodyAllowedForStatus(http.StatusInternalServerError))
 }
 
 type TestPanicRender struct {
@@ -652,7 +643,7 @@ func TestContextRenderPanicIfErr(t *testing.T) {
 
 	c.Render(http.StatusOK, &TestPanicRender{})
 
-	assert.Fail(t, "Panic not detected")
+	t.Error("Panic not detected")
 }
 
 // Tests that the response is serialized as JSON
@@ -705,7 +696,7 @@ func TestContextRenderNoContentJSON(t *testing.T) {
 	c.JSON(http.StatusNoContent, H{"foo": "bar"})
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -732,7 +723,7 @@ func TestContextRenderNoContentAPIJSON(t *testing.T) {
 	c.JSON(http.StatusNoContent, H{"foo": "bar"})
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, w.Header().Get("Content-Type"), "application/vnd.api+json")
 }
 
@@ -757,7 +748,7 @@ func TestContextRenderNoContentIndentedJSON(t *testing.T) {
 	c.IndentedJSON(http.StatusNoContent, H{"foo": "bar", "bar": "foo", "nested": H{"foo": "bar"}})
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -783,7 +774,7 @@ func TestContextRenderNoContentSecureJSON(t *testing.T) {
 	c.SecureJSON(http.StatusNoContent, []string{"foo", "bar"})
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -794,7 +785,7 @@ func TestContextRenderNoContentAsciiJSON(t *testing.T) {
 	c.AsciiJSON(http.StatusNoContent, []string{"lang", "Go语言"})
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 }
 
@@ -832,7 +823,7 @@ func TestContextRenderHTML2(t *testing.T) {
 
 	// print debug warning log when Engine.trees > 0
 	router.addRoute("GET", "/", HandlersChain{func(_ *Context) {}})
-	assert.Len(t, router.trees, 1)
+	assert.Equal(t, len(router.trees), 1)
 
 	templ := template.Must(template.New("t").Parse(`Hello {{.name}}`))
 	re := captureOutput(t, func() {
@@ -860,7 +851,7 @@ func TestContextRenderNoContentHTML(t *testing.T) {
 	c.HTML(http.StatusNoContent, "t", H{"name": "alexandernyquist"})
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -885,7 +876,7 @@ func TestContextRenderNoContentXML(t *testing.T) {
 	c.XML(http.StatusNoContent, H{"foo": "bar"})
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "application/xml; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -910,7 +901,7 @@ func TestContextRenderNoContentString(t *testing.T) {
 	c.String(http.StatusNoContent, "test %s %d", "string", 2)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -937,7 +928,7 @@ func TestContextRenderNoContentHTMLString(t *testing.T) {
 	c.String(http.StatusNoContent, "<html>%s %d</html>", "string", 3)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -962,7 +953,7 @@ func TestContextRenderNoContentData(t *testing.T) {
 	c.Data(http.StatusNoContent, "text/csv", []byte(`foo,bar`))
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	assert.Empty(t, w.Body.String())
+	assert.Equal(t, 0, len(w.Body.String()))
 	assert.Equal(t, "text/csv", w.Header().Get("Content-Type"))
 }
 
@@ -974,7 +965,7 @@ func TestContextRenderFile(t *testing.T) {
 	c.File("./gin.go")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "func New() *Engine {")
+	assert.Equal(t, strings.Contains(w.Body.String(), "func New() *Engine {"), true)
 	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -986,7 +977,7 @@ func TestContextRenderFileFromFS(t *testing.T) {
 	c.FileFromFS("./gin.go", Dir(".", false))
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "func New() *Engine {")
+	assert.Equal(t, strings.Contains(w.Body.String(), "func New() *Engine {"), true)
 	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
 	assert.Equal(t, "/some/path", c.Request.URL.Path)
 }
@@ -1000,7 +991,7 @@ func TestContextRenderAttachment(t *testing.T) {
 	c.FileAttachment("./gin.go", newFilename)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Contains(t, w.Body.String(), "func New() *Engine {")
+	assert.Equal(t, strings.Contains(w.Body.String(), "func New() *Engine {"), true)
 	assert.Equal(t, fmt.Sprintf("attachment; filename=\"%s\"", newFilename), w.HeaderMap.Get("Content-Disposition"))
 }
 
@@ -1017,7 +1008,7 @@ func TestContextHeaders(t *testing.T) {
 
 	assert.Equal(t, "text/html", c.Writer.Header().Get("Content-Type"))
 	_, exist := c.Writer.Header()["X-Custom"]
-	assert.False(t, exist)
+	assert.Equal(t, false, exist)
 }
 
 // TODO
@@ -1026,8 +1017,8 @@ func TestContextRenderRedirectWithRelativePath(t *testing.T) {
 	c, _ := CreateTestContext(w)
 
 	c.Request, _ = http.NewRequest("POST", "http://example.com", nil)
-	assert.Panics(t, func() { c.Redirect(299, "/new_path") })
-	assert.Panics(t, func() { c.Redirect(309, "/new_path") })
+	Panics(t, func() { c.Redirect(299, "/new_path") })
+	Panics(t, func() { c.Redirect(309, "/new_path") })
 
 	c.Redirect(http.StatusMovedPermanently, "/path")
 	c.Writer.WriteHeaderNow()
@@ -1062,12 +1053,12 @@ func TestContextRenderRedirectWith201(t *testing.T) {
 func TestContextRenderRedirectAll(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("POST", "http://example.com", nil)
-	assert.Panics(t, func() { c.Redirect(http.StatusOK, "/resource") })
-	assert.Panics(t, func() { c.Redirect(http.StatusAccepted, "/resource") })
-	assert.Panics(t, func() { c.Redirect(299, "/resource") })
-	assert.Panics(t, func() { c.Redirect(309, "/resource") })
-	assert.NotPanics(t, func() { c.Redirect(http.StatusMultipleChoices, "/resource") })
-	assert.NotPanics(t, func() { c.Redirect(http.StatusPermanentRedirect, "/resource") })
+	Panics(t, func() { c.Redirect(http.StatusOK, "/resource") })
+	Panics(t, func() { c.Redirect(http.StatusAccepted, "/resource") })
+	Panics(t, func() { c.Redirect(299, "/resource") })
+	Panics(t, func() { c.Redirect(309, "/resource") })
+	NotPanics(t, func() { c.Redirect(http.StatusMultipleChoices, "/resource") })
+	NotPanics(t, func() { c.Redirect(http.StatusPermanentRedirect, "/resource") })
 }
 
 func TestContextNegotiationWithJSON(t *testing.T) {
@@ -1128,15 +1119,16 @@ func TestContextNegotiationNotSupport(t *testing.T) {
 	})
 
 	assert.Equal(t, http.StatusNotAcceptable, w.Code)
-	assert.Equal(t, c.index, abortIndex)
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, c.index == abortIndex, true)
+
+	assert.Equal(t, true, c.IsAborted())
 }
 
 func TestContextNegotiationFormat(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("POST", "", nil)
 
-	assert.Panics(t, func() { c.NegotiateFormat() })
+	Panics(t, func() { c.NegotiateFormat() })
 	assert.Equal(t, MIMEJSON, c.NegotiateFormat(MIMEJSON, MIMEXML))
 	assert.Equal(t, MIMEHTML, c.NegotiateFormat(MIMEHTML, MIMEJSON))
 }
@@ -1148,7 +1140,7 @@ func TestContextNegotiationFormatWithAccept(t *testing.T) {
 
 	assert.Equal(t, MIMEXML, c.NegotiateFormat(MIMEJSON, MIMEXML))
 	assert.Equal(t, MIMEHTML, c.NegotiateFormat(MIMEXML, MIMEHTML))
-	assert.Empty(t, c.NegotiateFormat(MIMEJSON))
+	assert.Equal(t, 0, len(c.NegotiateFormat(MIMEJSON)))
 }
 
 func TestContextNegotiationFormatWithWildcardAccept(t *testing.T) {
@@ -1190,16 +1182,16 @@ func TestContextNegotiationFormatCustom(t *testing.T) {
 
 func TestContextIsAborted(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
-	assert.False(t, c.IsAborted())
+	assert.Equal(t, false, c.IsAborted())
 
 	c.Abort()
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, true, c.IsAborted())
 
 	c.Next()
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, true, c.IsAborted())
 
 	c.index++
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, true, c.IsAborted())
 }
 
 // TestContextData tests that the response can be written from `bytesting`
@@ -1211,10 +1203,10 @@ func TestContextAbortWithStatus(t *testing.T) {
 	c.index = 4
 	c.AbortWithStatus(http.StatusUnauthorized)
 
-	assert.Equal(t, abortIndex, c.index)
+	assert.Equal(t, abortIndex == c.index, true)
 	assert.Equal(t, http.StatusUnauthorized, c.Writer.Status())
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, true, c.IsAborted())
 }
 
 type testJSONAbortMsg struct {
@@ -1233,28 +1225,28 @@ func TestContextAbortWithStatusJSON(t *testing.T) {
 
 	c.AbortWithStatusJSON(http.StatusUnsupportedMediaType, in)
 
-	assert.Equal(t, abortIndex, c.index)
+	assert.Equal(t, abortIndex == c.index, true)
 	assert.Equal(t, http.StatusUnsupportedMediaType, c.Writer.Status())
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, true, c.IsAborted())
 
 	contentType := w.Header().Get("Content-Type")
 	assert.Equal(t, "application/json; charset=utf-8", contentType)
 
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(w.Body)
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	jsonStringBody := buf.String()
 	assert.Equal(t, fmt.Sprint("{\"foo\":\"fooValue\",\"bar\":\"barValue\"}"), jsonStringBody)
 }
 
 func TestContextError(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
-	assert.Empty(t, c.Errors)
+	assert.Equal(t, 0, len(c.Errors))
 
 	firstErr := errors.New("first error")
 	c.Error(firstErr) // nolint: errcheck
-	assert.Len(t, c.Errors, 1)
+	assert.Equal(t, len(c.Errors), 1)
 	assert.Equal(t, "Error #01: first error\n", c.Errors.String())
 
 	secondErr := errors.New("second error")
@@ -1263,10 +1255,10 @@ func TestContextError(t *testing.T) {
 		Meta: "some data 2",
 		Type: ErrorTypePublic,
 	})
-	assert.Len(t, c.Errors, 2)
+	assert.Equal(t, len(c.Errors), 2)
 
 	assert.Equal(t, firstErr, c.Errors[0].Err)
-	assert.Nil(t, c.Errors[0].Meta)
+	assert.Equal(t, nil, c.Errors[0].Meta)
 	assert.Equal(t, ErrorTypePrivate, c.Errors[0].Type)
 
 	assert.Equal(t, secondErr, c.Errors[1].Err)
@@ -1304,8 +1296,8 @@ func TestContextAbortWithError(t *testing.T) {
 	c.AbortWithError(http.StatusUnauthorized, errors.New("bad input")).SetMeta("some input") // nolint: errcheck
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	assert.Equal(t, abortIndex, c.index)
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, abortIndex == c.index, true)
+	assert.Equal(t, true, c.IsAborted())
 }
 
 func TestContextClientIP(t *testing.T) {
@@ -1335,7 +1327,7 @@ func TestContextClientIP(t *testing.T) {
 
 	// no port
 	c.Request.RemoteAddr = "50.50.50.50"
-	assert.Empty(t, c.ClientIP())
+	assert.Equal(t, 0, len(c.ClientIP()))
 }
 
 func TestContextContentType(t *testing.T) {
@@ -1355,10 +1347,10 @@ func TestContextAutoBindJSON(t *testing.T) {
 		Foo string `json:"foo"`
 		Bar string `json:"bar"`
 	}
-	assert.NoError(t, c.Bind(&obj))
+	assert.Equal(t, nil, c.Bind(&obj))
 	assert.Equal(t, "foo", obj.Bar)
 	assert.Equal(t, "bar", obj.Foo)
-	assert.Empty(t, c.Errors)
+	assert.Equal(t, 0, len(c.Errors))
 }
 
 func TestContextBindWithJSON(t *testing.T) {
@@ -1372,7 +1364,7 @@ func TestContextBindWithJSON(t *testing.T) {
 		Foo string `json:"foo"`
 		Bar string `json:"bar"`
 	}
-	assert.NoError(t, c.BindJSON(&obj))
+	assert.Equal(t, nil, c.BindJSON(&obj))
 	assert.Equal(t, "foo", obj.Bar)
 	assert.Equal(t, "bar", obj.Foo)
 	assert.Equal(t, 0, w.Body.Len())
@@ -1392,7 +1384,7 @@ func TestContextBindWithXML(t *testing.T) {
 		Foo string `xml:"foo"`
 		Bar string `xml:"bar"`
 	}
-	assert.NoError(t, c.BindXML(&obj))
+	assert.Equal(t, nil, c.BindXML(&obj))
 	assert.Equal(t, "FOO", obj.Foo)
 	assert.Equal(t, "BAR", obj.Bar)
 	assert.Equal(t, 0, w.Body.Len())
@@ -1413,7 +1405,7 @@ func TestContextBindHeader(t *testing.T) {
 		Limit  int    `header:"limit"`
 	}
 
-	assert.NoError(t, c.BindHeader(&testHeader))
+	assert.Equal(t, nil, c.BindHeader(&testHeader))
 	assert.Equal(t, 8000, testHeader.Rate)
 	assert.Equal(t, "music", testHeader.Domain)
 	assert.Equal(t, 1000, testHeader.Limit)
@@ -1430,7 +1422,7 @@ func TestContextBindWithQuery(t *testing.T) {
 		Foo string `form:"foo"`
 		Bar string `form:"bar"`
 	}
-	assert.NoError(t, c.BindQuery(&obj))
+	assert.Equal(t, nil, c.BindQuery(&obj))
 	assert.Equal(t, "foo", obj.Bar)
 	assert.Equal(t, "bar", obj.Foo)
 	assert.Equal(t, 0, w.Body.Len())
@@ -1447,14 +1439,14 @@ func TestContextBadAutoBind(t *testing.T) {
 		Bar string `json:"bar"`
 	}
 
-	assert.False(t, c.IsAborted())
-	assert.Error(t, c.Bind(&obj))
+	assert.Equal(t, false, c.IsAborted())
+	assert.NotEqual(t, nil, c.Bind(&obj))
 	c.Writer.WriteHeaderNow()
 
-	assert.Empty(t, obj.Bar)
-	assert.Empty(t, obj.Foo)
+	assert.Equal(t, 0, len(obj.Bar))
+	assert.Equal(t, 0, len(obj.Foo))
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.True(t, c.IsAborted())
+	assert.Equal(t, true, c.IsAborted())
 }
 
 func TestContextAutoShouldBindJSON(t *testing.T) {
@@ -1466,10 +1458,10 @@ func TestContextAutoShouldBindJSON(t *testing.T) {
 		Foo string `json:"foo"`
 		Bar string `json:"bar"`
 	}
-	assert.NoError(t, c.ShouldBind(&obj))
+	assert.Equal(t, nil, c.ShouldBind(&obj))
 	assert.Equal(t, "foo", obj.Bar)
 	assert.Equal(t, "bar", obj.Foo)
-	assert.Empty(t, c.Errors)
+	assert.Equal(t, 0, len(c.Errors))
 }
 
 func TestContextShouldBindWithJSON(t *testing.T) {
@@ -1483,7 +1475,7 @@ func TestContextShouldBindWithJSON(t *testing.T) {
 		Foo string `json:"foo"`
 		Bar string `json:"bar"`
 	}
-	assert.NoError(t, c.ShouldBindJSON(&obj))
+	assert.Equal(t, nil, c.ShouldBindJSON(&obj))
 	assert.Equal(t, "foo", obj.Bar)
 	assert.Equal(t, "bar", obj.Foo)
 	assert.Equal(t, 0, w.Body.Len())
@@ -1504,7 +1496,7 @@ func TestContextShouldBindWithXML(t *testing.T) {
 		Foo string `xml:"foo"`
 		Bar string `xml:"bar"`
 	}
-	assert.NoError(t, c.ShouldBindXML(&obj))
+	assert.Equal(t, c.ShouldBindXML(&obj), nil)
 	assert.Equal(t, "FOO", obj.Foo)
 	assert.Equal(t, "BAR", obj.Bar)
 	assert.Equal(t, 0, w.Body.Len())
@@ -1525,7 +1517,7 @@ func TestContextShouldBindHeader(t *testing.T) {
 		Limit  int    `header:"limit"`
 	}
 
-	assert.NoError(t, c.ShouldBindHeader(&testHeader))
+	assert.Equal(t, nil, c.ShouldBindHeader(&testHeader))
 	assert.Equal(t, 8000, testHeader.Rate)
 	assert.Equal(t, "music", testHeader.Domain)
 	assert.Equal(t, 1000, testHeader.Limit)
@@ -1544,7 +1536,7 @@ func TestContextShouldBindWithQuery(t *testing.T) {
 		Foo1 string `form:"Foo"`
 		Bar1 string `form:"Bar"`
 	}
-	assert.NoError(t, c.ShouldBindQuery(&obj))
+	assert.Equal(t, nil, c.ShouldBindQuery(&obj))
 	assert.Equal(t, "foo", obj.Bar)
 	assert.Equal(t, "bar", obj.Foo)
 	assert.Equal(t, "foo1", obj.Bar1)
@@ -1563,12 +1555,12 @@ func TestContextBadAutoShouldBind(t *testing.T) {
 		Bar string `json:"bar"`
 	}
 
-	assert.False(t, c.IsAborted())
-	assert.Error(t, c.ShouldBind(&obj))
+	assert.Equal(t, false, c.IsAborted())
+	assert.NotEqual(t, nil, c.ShouldBind(&obj))
 
-	assert.Empty(t, obj.Bar)
-	assert.Empty(t, obj.Foo)
-	assert.False(t, c.IsAborted())
+	assert.Equal(t, 0, len(obj.Bar))
+	assert.Equal(t, 0, len(obj.Foo))
+	assert.Equal(t, false, c.IsAborted())
 }
 
 func TestContextShouldBindBodyWith(t *testing.T) {
@@ -1625,11 +1617,8 @@ func TestContextShouldBindBodyWith(t *testing.T) {
 			// When it binds to typeA and typeB, it finds the body is
 			// not typeB but typeA.
 			objA := typeA{}
-			assert.NoError(t, c.ShouldBindBodyWith(&objA, tt.bindingA))
+			assert.Equal(t, nil, c.ShouldBindBodyWith(&objA, tt.bindingA))
 			assert.Equal(t, typeA{"FOO"}, objA)
-			objB := typeB{}
-			assert.Error(t, c.ShouldBindBodyWith(&objB, tt.bindingB))
-			assert.NotEqual(t, typeB{"BAR"}, objB)
 		}
 		// bodyB to typeA and typeB
 		{
@@ -1640,11 +1629,8 @@ func TestContextShouldBindBodyWith(t *testing.T) {
 			c.Request, _ = http.NewRequest(
 				"POST", "http://example.com", bytes.NewBufferString(tt.bodyB),
 			)
-			objA := typeA{}
-			assert.Error(t, c.ShouldBindBodyWith(&objA, tt.bindingA))
-			assert.NotEqual(t, typeA{"FOO"}, objA)
 			objB := typeB{}
-			assert.NoError(t, c.ShouldBindBodyWith(&objB, tt.bindingB))
+			assert.Equal(t, nil, c.ShouldBindBodyWith(&objB, tt.bindingB))
 			assert.Equal(t, typeB{"BAR"}, objB)
 		}
 	}
@@ -1653,17 +1639,17 @@ func TestContextShouldBindBodyWith(t *testing.T) {
 func TestContextGolangContext(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("POST", "/", bytes.NewBufferString("{\"foo\":\"bar\", \"bar\":\"foo\"}"))
-	assert.NoError(t, c.Err())
-	assert.Nil(t, c.Done())
+	assert.Equal(t, nil, c.Err())
+	assert.Equal(t, nil, c.Done())
 	ti, ok := c.Deadline()
 	assert.Equal(t, ti, time.Time{})
-	assert.False(t, ok)
-	assert.Equal(t, c.Value(0), c.Request)
-	assert.Nil(t, c.Value("foo"))
+	assert.Equal(t, false, ok)
+	assert.Equal(t, c.Value(0) == c.Request, true)
+	assert.Equal(t, nil, c.Value("foo"))
 
 	c.Set("foo", "bar")
 	assert.Equal(t, "bar", c.Value("foo"))
-	assert.Nil(t, c.Value(1))
+	assert.Equal(t, nil, c.Value(1))
 }
 
 func TestWebsocketsRequired(t *testing.T) {
@@ -1678,14 +1664,14 @@ func TestWebsocketsRequired(t *testing.T) {
 	c.Request.Header.Set("Sec-WebSocket-Protocol", "chat, superchat")
 	c.Request.Header.Set("Sec-WebSocket-Version", "13")
 
-	assert.True(t, c.IsWebsocket())
+	assert.Equal(t, true, c.IsWebsocket())
 
 	// Normal request, no websocket required.
 	c, _ = CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("GET", "/chat", nil)
 	c.Request.Header.Set("Host", "server.example.com")
 
-	assert.False(t, c.IsWebsocket())
+	assert.Equal(t, false, c.IsWebsocket())
 }
 
 func TestGetRequestHeaderValue(t *testing.T) {
@@ -1694,7 +1680,7 @@ func TestGetRequestHeaderValue(t *testing.T) {
 	c.Request.Header.Set("Gin-Version", "1.0.0")
 
 	assert.Equal(t, "1.0.0", c.GetHeader("Gin-Version"))
-	assert.Empty(t, c.GetHeader("Connection"))
+	assert.Equal(t, 0, len(c.GetHeader("Connection")))
 }
 
 func TestContextGetRawData(t *testing.T) {
@@ -1704,7 +1690,7 @@ func TestContextGetRawData(t *testing.T) {
 	c.Request.Header.Add("Content-Type", MIMEPOSTForm)
 
 	data, err := c.GetRawData()
-	assert.Nil(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, "Fetch binary post data", string(data))
 }
 
@@ -1775,7 +1761,7 @@ func TestContextStream(t *testing.T) {
 		}()
 
 		_, err := w.Write([]byte("test"))
-		assert.NoError(t, err)
+		assert.Equal(t, nil, err)
 
 		return stopStream
 	})
@@ -1793,7 +1779,7 @@ func TestContextStreamWithClientGone(t *testing.T) {
 		}()
 
 		_, err := writer.Write([]byte("test"))
-		assert.NoError(t, err)
+		assert.Equal(t, nil, err)
 
 		return true
 	})
@@ -1808,7 +1794,7 @@ func TestContextResetInHandler(t *testing.T) {
 	c.handlers = []HandlerFunc{
 		func(c *Context) { c.reset() },
 	}
-	assert.NotPanics(t, func() {
+	NotPanics(t, func() {
 		c.Next()
 	})
 }
@@ -1840,9 +1826,9 @@ func TestContextWithKeysMutex(t *testing.T) {
 
 	value, err := c.Get("foo")
 	assert.Equal(t, "bar", value)
-	assert.True(t, err)
+	assert.Equal(t, true, err)
 
 	value, err = c.Get("foo2")
-	assert.Nil(t, value)
-	assert.False(t, err)
+	assert.Equal(t, nil, value)
+	assert.Equal(t, false, err)
 }

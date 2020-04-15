@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func TestFormMultipartBindingBindOneFile(t *testing.T) {
@@ -27,13 +27,13 @@ func TestFormMultipartBindingBindOneFile(t *testing.T) {
 
 	req := createRequestMultipartFiles(t, file)
 	err := FormMultipart.Bind(req, &s)
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	assertMultipartFileHeader(t, &s.FileValue, file)
 	assertMultipartFileHeader(t, s.FilePtr, file)
-	assert.Len(t, s.SliceValues, 1)
+	assert.Equal(t, len(s.SliceValues), 1)
 	assertMultipartFileHeader(t, &s.SliceValues[0], file)
-	assert.Len(t, s.SlicePtrs, 1)
+	assert.Equal(t, len(s.SlicePtrs), 1)
 	assertMultipartFileHeader(t, s.SlicePtrs[0], file)
 	assertMultipartFileHeader(t, &s.ArrayValues[0], file)
 	assertMultipartFileHeader(t, s.ArrayPtrs[0], file)
@@ -53,12 +53,12 @@ func TestFormMultipartBindingBindTwoFiles(t *testing.T) {
 
 	req := createRequestMultipartFiles(t, files...)
 	err := FormMultipart.Bind(req, &s)
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
-	assert.Len(t, s.SliceValues, len(files))
-	assert.Len(t, s.SlicePtrs, len(files))
-	assert.Len(t, s.ArrayValues, len(files))
-	assert.Len(t, s.ArrayPtrs, len(files))
+	assert.Equal(t, len(s.SliceValues), len(files))
+	assert.Equal(t, len(s.SlicePtrs), len(files))
+	assert.Equal(t, len(s.ArrayValues), len(files))
+	assert.Equal(t, len(s.ArrayPtrs), len(files))
 
 	for i, file := range files {
 		assertMultipartFileHeader(t, &s.SliceValues[i], file)
@@ -90,7 +90,7 @@ func TestFormMultipartBindingBindError(t *testing.T) {
 	} {
 		req := createRequestMultipartFiles(t, files...)
 		err := FormMultipart.Bind(req, tt.s)
-		assert.Error(t, err)
+		assert.NotEqual(t, nil, err)
 	}
 }
 
@@ -106,17 +106,17 @@ func createRequestMultipartFiles(t *testing.T, files ...testFile) *http.Request 
 	mw := multipart.NewWriter(&body)
 	for _, file := range files {
 		fw, err := mw.CreateFormFile(file.Fieldname, file.Filename)
-		assert.NoError(t, err)
+		assert.Equal(t, nil, err)
 
 		n, err := fw.Write(file.Content)
-		assert.NoError(t, err)
+		assert.Equal(t, nil, err)
 		assert.Equal(t, len(file.Content), n)
 	}
 	err := mw.Close()
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	req, err := http.NewRequest("POST", "/", &body)
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	req.Header.Set("Content-Type", MIMEMultipartPOSTForm+"; boundary="+mw.Boundary())
 	return req
@@ -127,12 +127,12 @@ func assertMultipartFileHeader(t *testing.T, fh *multipart.FileHeader, file test
 	// assert.Equal(t, int64(len(file.Content)), fh.Size) // fh.Size does not exist on go1.8
 
 	fl, err := fh.Open()
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	body, err := ioutil.ReadAll(fl)
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, string(file.Content), string(body))
 
 	err = fl.Close()
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 }

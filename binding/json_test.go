@@ -7,8 +7,7 @@ package binding
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/go-playground/assert"
 )
 
 func TestJSONBindingBindBody(t *testing.T) {
@@ -16,6 +15,6 @@ func TestJSONBindingBindBody(t *testing.T) {
 		Foo string `json:"foo"`
 	}
 	err := jsonBinding{}.BindBody([]byte(`{"foo": "FOO"}`), &s)
-	require.NoError(t, err)
+	assert.Equal(t, err, nil)
 	assert.Equal(t, "FOO", s.Foo)
 }

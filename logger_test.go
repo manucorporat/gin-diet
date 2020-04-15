@@ -9,10 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func init() {
@@ -32,55 +33,55 @@ func TestLogger(t *testing.T) {
 	router.OPTIONS("/example", func(c *Context) {})
 
 	performRequest(router, "GET", "/example?a=100")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "GET")
-	assert.Contains(t, buffer.String(), "/example")
-	assert.Contains(t, buffer.String(), "a=100")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "GET")
+	Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "a=100")
 
 	// I wrote these first (extending the above) but then realized they are more
 	// like integration tests because they test the whole logging process rather
 	// than individual functions.  Im not sure where these should go.
 	buffer.Reset()
 	performRequest(router, "POST", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "POST")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "POST")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "PUT", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "PUT")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "PUT")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "DELETE", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "DELETE")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "DELETE")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "PATCH", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "PATCH")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "PATCH")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "HEAD", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "HEAD")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "HEAD")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "OPTIONS", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "OPTIONS")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "OPTIONS")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "GET", "/notfound")
-	assert.Contains(t, buffer.String(), "404")
-	assert.Contains(t, buffer.String(), "GET")
-	assert.Contains(t, buffer.String(), "/notfound")
+	Contains(t, buffer.String(), "404")
+	Contains(t, buffer.String(), "GET")
+	Contains(t, buffer.String(), "/notfound")
 }
 
 func TestLoggerWithConfig(t *testing.T) {
@@ -96,55 +97,55 @@ func TestLoggerWithConfig(t *testing.T) {
 	router.OPTIONS("/example", func(c *Context) {})
 
 	performRequest(router, "GET", "/example?a=100")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "GET")
-	assert.Contains(t, buffer.String(), "/example")
-	assert.Contains(t, buffer.String(), "a=100")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "GET")
+	Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "a=100")
 
 	// I wrote these first (extending the above) but then realized they are more
 	// like integration tests because they test the whole logging process rather
 	// than individual functions.  Im not sure where these should go.
 	buffer.Reset()
 	performRequest(router, "POST", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "POST")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "POST")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "PUT", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "PUT")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "PUT")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "DELETE", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "DELETE")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "DELETE")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "PATCH", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "PATCH")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "PATCH")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "HEAD", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "HEAD")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "HEAD")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "OPTIONS", "/example")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "OPTIONS")
-	assert.Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "OPTIONS")
+	Contains(t, buffer.String(), "/example")
 
 	buffer.Reset()
 	performRequest(router, "GET", "/notfound")
-	assert.Contains(t, buffer.String(), "404")
-	assert.Contains(t, buffer.String(), "GET")
-	assert.Contains(t, buffer.String(), "/notfound")
+	Contains(t, buffer.String(), "404")
+	Contains(t, buffer.String(), "GET")
+	Contains(t, buffer.String(), "/notfound")
 }
 
 func TestLoggerWithFormatter(t *testing.T) {
@@ -172,11 +173,11 @@ func TestLoggerWithFormatter(t *testing.T) {
 	performRequest(router, "GET", "/example?a=100")
 
 	// output test
-	assert.Contains(t, buffer.String(), "[FORMATTER TEST]")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "GET")
-	assert.Contains(t, buffer.String(), "/example")
-	assert.Contains(t, buffer.String(), "a=100")
+	Contains(t, buffer.String(), "[FORMATTER TEST]")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "GET")
+	Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "a=100")
 }
 
 func TestLoggerWithConfigFormatting(t *testing.T) {
@@ -210,21 +211,21 @@ func TestLoggerWithConfigFormatting(t *testing.T) {
 	performRequest(router, "GET", "/example?a=100")
 
 	// output test
-	assert.Contains(t, buffer.String(), "[FORMATTER TEST]")
-	assert.Contains(t, buffer.String(), "200")
-	assert.Contains(t, buffer.String(), "GET")
-	assert.Contains(t, buffer.String(), "/example")
-	assert.Contains(t, buffer.String(), "a=100")
+	Contains(t, buffer.String(), "[FORMATTER TEST]")
+	Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "GET")
+	Contains(t, buffer.String(), "/example")
+	Contains(t, buffer.String(), "a=100")
 
 	// LogFormatterParams test
-	assert.NotNil(t, gotParam.Request)
-	assert.NotEmpty(t, gotParam.TimeStamp)
+	assert.NotEqual(t, nil, gotParam.Request)
+	assert.NotEqual(t, gotParam.TimeStamp, 0)
 	assert.Equal(t, 200, gotParam.StatusCode)
-	assert.NotEmpty(t, gotParam.Latency)
+	assert.NotEqual(t, gotParam.Latency, 0)
 	assert.Equal(t, "20.20.20.20", gotParam.ClientIP)
 	assert.Equal(t, "GET", gotParam.Method)
 	assert.Equal(t, "/example?a=100", gotParam.Path)
-	assert.Empty(t, gotParam.ErrorMessage)
+	assert.Equal(t, 0, len(gotParam.ErrorMessage))
 	assert.Equal(t, gotKeys, gotParam.Keys)
 
 }
@@ -291,14 +292,14 @@ func TestColorForMethod(t *testing.T) {
 		return p.MethodColor()
 	}
 
-	assert.Equal(t, blue, colorForMethod("GET"), "get should be blue")
-	assert.Equal(t, cyan, colorForMethod("POST"), "post should be cyan")
-	assert.Equal(t, yellow, colorForMethod("PUT"), "put should be yellow")
-	assert.Equal(t, red, colorForMethod("DELETE"), "delete should be red")
-	assert.Equal(t, green, colorForMethod("PATCH"), "patch should be green")
-	assert.Equal(t, magenta, colorForMethod("HEAD"), "head should be magenta")
-	assert.Equal(t, white, colorForMethod("OPTIONS"), "options should be white")
-	assert.Equal(t, reset, colorForMethod("TRACE"), "trace is not defined and should be the reset color")
+	assert.Equal(t, blue, colorForMethod("GET"))
+	assert.Equal(t, cyan, colorForMethod("POST"))
+	assert.Equal(t, yellow, colorForMethod("PUT"))
+	assert.Equal(t, red, colorForMethod("DELETE"))
+	assert.Equal(t, green, colorForMethod("PATCH"))
+	assert.Equal(t, magenta, colorForMethod("HEAD"))
+	assert.Equal(t, white, colorForMethod("OPTIONS"))
+	assert.Equal(t, reset, colorForMethod("TRACE"))
 }
 
 func TestColorForStatus(t *testing.T) {
@@ -309,10 +310,10 @@ func TestColorForStatus(t *testing.T) {
 		return p.StatusCodeColor()
 	}
 
-	assert.Equal(t, green, colorForStatus(http.StatusOK), "2xx should be green")
-	assert.Equal(t, white, colorForStatus(http.StatusMovedPermanently), "3xx should be white")
-	assert.Equal(t, yellow, colorForStatus(http.StatusNotFound), "4xx should be yellow")
-	assert.Equal(t, red, colorForStatus(2), "other things should be red")
+	assert.Equal(t, green, colorForStatus(http.StatusOK))
+	assert.Equal(t, white, colorForStatus(http.StatusMovedPermanently))
+	assert.Equal(t, yellow, colorForStatus(http.StatusNotFound))
+	assert.Equal(t, red, colorForStatus(2))
 }
 
 func TestResetColor(t *testing.T) {
@@ -388,11 +389,11 @@ func TestLoggerWithWriterSkippingPaths(t *testing.T) {
 	router.GET("/skipped", func(c *Context) {})
 
 	performRequest(router, "GET", "/logged")
-	assert.Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "200")
 
 	buffer.Reset()
 	performRequest(router, "GET", "/skipped")
-	assert.Contains(t, buffer.String(), "")
+	Contains(t, buffer.String(), "")
 }
 
 func TestLoggerWithConfigSkippingPaths(t *testing.T) {
@@ -406,11 +407,11 @@ func TestLoggerWithConfigSkippingPaths(t *testing.T) {
 	router.GET("/skipped", func(c *Context) {})
 
 	performRequest(router, "GET", "/logged")
-	assert.Contains(t, buffer.String(), "200")
+	Contains(t, buffer.String(), "200")
 
 	buffer.Reset()
 	performRequest(router, "GET", "/skipped")
-	assert.Contains(t, buffer.String(), "")
+	Contains(t, buffer.String(), "")
 }
 
 func TestDisableConsoleColor(t *testing.T) {
@@ -431,4 +432,24 @@ func TestForceConsoleColor(t *testing.T) {
 
 	// reset console color mode.
 	consoleColorMode = autoColor
+}
+
+func Panics(t *testing.T, cb func()) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("it does not panic")
+		}
+	}()
+	cb()
+}
+func NotPanics(t *testing.T, cb func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error("it does panic")
+		}
+	}()
+	cb()
+}
+func Contains(t *testing.T, content, substr string) {
+	assert.Equal(t, strings.Contains(content, substr), true)
 }

@@ -7,8 +7,6 @@ package binding
 import (
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var form = map[string][]string{
@@ -38,14 +36,6 @@ func BenchmarkMapFormFull(b *testing.B) {
 		}
 	}
 	b.StopTimer()
-
-	t := b
-	assert.Equal(t, "mike", s.Name)
-	assert.Equal(t, 25, s.Age)
-	assert.Equal(t, []string{"anna", "nicole"}, s.Friends)
-	assert.Equal(t, "12345678", s.ID.Number)
-	assert.Equal(t, time.Date(2018, 1, 20, 0, 0, 0, 0, time.UTC), s.ID.DateOfIssue)
-	assert.Nil(t, s.Nationality)
 }
 
 type structName struct {
@@ -61,7 +51,4 @@ func BenchmarkMapFormName(b *testing.B) {
 		}
 	}
 	b.StopTimer()
-
-	t := b
-	assert.Equal(t, "mike", s.Name)
 }

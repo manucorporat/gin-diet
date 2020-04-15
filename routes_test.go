@@ -11,9 +11,10 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 type header struct {
@@ -43,11 +44,11 @@ func testRouteOK(method string, t *testing.T) {
 	})
 
 	w := performRequest(r, method, "/test")
-	assert.True(t, passed)
+	assert.Equal(t, true, passed)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	performRequest(r, method, "/test2")
-	assert.True(t, passedAny)
+	assert.Equal(t, true, passedAny)
 }
 
 // TestSingleRouteOK tests that POST route is correctly invoked.
@@ -60,7 +61,7 @@ func testRouteNotOK(method string, t *testing.T) {
 
 	w := performRequest(router, method, "/test")
 
-	assert.False(t, passed)
+	assert.Equal(t, false, passed)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
@@ -81,7 +82,7 @@ func testRouteNotOK2(method string, t *testing.T) {
 
 	w := performRequest(router, method, "/test")
 
-	assert.False(t, passed)
+	assert.Equal(t, false, passed)
 	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 }
 
@@ -236,17 +237,17 @@ func TestRouteParamsByName(t *testing.T) {
 		var ok bool
 		wild, ok = c.Params.Get("wild")
 
-		assert.True(t, ok)
+		assert.Equal(t, true, ok)
 		assert.Equal(t, name, c.Param("name"))
 		assert.Equal(t, name, c.Param("name"))
 		assert.Equal(t, lastName, c.Param("last_name"))
 
-		assert.Empty(t, c.Param("wtf"))
-		assert.Empty(t, c.Params.ByName("wtf"))
+		assert.Equal(t, 0, len(c.Param("wtf")))
+		assert.Equal(t, 0, len(c.Params.ByName("wtf")))
 
 		wtf, ok := c.Params.Get("wtf")
-		assert.Empty(t, wtf)
-		assert.False(t, ok)
+		assert.Equal(t, 0, len(wtf))
+		assert.Equal(t, false, ok)
 	})
 
 	w := performRequest(router, http.MethodGet, "/test/john/smith/is/super/great")
@@ -270,17 +271,17 @@ func TestRouteParamsByNameWithExtraSlash(t *testing.T) {
 		var ok bool
 		wild, ok = c.Params.Get("wild")
 
-		assert.True(t, ok)
+		assert.Equal(t, true, ok)
 		assert.Equal(t, name, c.Param("name"))
 		assert.Equal(t, name, c.Param("name"))
 		assert.Equal(t, lastName, c.Param("last_name"))
 
-		assert.Empty(t, c.Param("wtf"))
-		assert.Empty(t, c.Params.ByName("wtf"))
+		assert.Equal(t, 0, len(c.Param("wtf")))
+		assert.Equal(t, 0, len(c.Params.ByName("wtf")))
 
 		wtf, ok := c.Params.Get("wtf")
-		assert.Empty(t, wtf)
-		assert.False(t, ok)
+		assert.Equal(t, 0, len(wtf))
+		assert.Equal(t, false, ok)
 	})
 
 	w := performRequest(router, http.MethodGet, "//test//john//smith//is//super//great")
@@ -301,7 +302,7 @@ func TestRouteStaticFile(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 	_, err = f.WriteString("Gin Web Framework")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	f.Close()
 
 	dir, filename := filepath.Split(f.Name())
@@ -334,7 +335,7 @@ func TestRouteStaticListingDir(t *testing.T) {
 	w := performRequest(router, http.MethodGet, "/")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "gin.go")
+	Contains(t, w.Body.String(), "gin.go")
 	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
@@ -346,7 +347,7 @@ func TestRouteStaticNoListing(t *testing.T) {
 	w := performRequest(router, http.MethodGet, "/")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	assert.NotContains(t, w.Body.String(), "gin.go")
+	assert.Equal(t, strings.Contains(w.Body.String(), "gin.go"), false)
 }
 
 func TestRouterMiddlewareAndStatic(t *testing.T) {
@@ -361,7 +362,7 @@ func TestRouterMiddlewareAndStatic(t *testing.T) {
 	w := performRequest(router, http.MethodGet, "/gin.go")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "package gin")
+	Contains(t, w.Body.String(), "package gin")
 	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
 	assert.NotEqual(t, w.Header().Get("Last-Modified"), "Mon, 02 Jan 2006 15:04:05 MST")
 	assert.Equal(t, "Mon, 02 Jan 2006 15:04:05 MST", w.Header().Get("Expires"))
@@ -468,7 +469,7 @@ func TestRouterNotFound(t *testing.T) {
 	})
 	w := performRequest(router, http.MethodGet, "/nope")
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	assert.True(t, notFound)
+	assert.Equal(t, true, notFound)
 
 	// Test other method than GET (want 307 instead of 301)
 	router.PATCH("/path", func(c *Context) {})
@@ -502,7 +503,7 @@ func TestRouterStaticFSFileNotFound(t *testing.T) {
 
 	router.StaticFS("/", http.FileSystem(http.Dir(".")))
 
-	assert.NotPanics(t, func() {
+	NotPanics(t, func() {
 		performRequest(router, http.MethodGet, "/nonexistent")
 	})
 }

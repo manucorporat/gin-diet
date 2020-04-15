@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func TestMappingBaseTypes(t *testing.T) {
@@ -44,19 +44,16 @@ func TestMappingBaseTypes(t *testing.T) {
 		{"zero value", struct{ F bool }{}, "", false},
 		{"zero value", struct{ F float32 }{}, "", float32(0)},
 	} {
-		tp := reflect.TypeOf(tt.value)
-		testName := tt.name + ":" + tp.Field(0).Type.String()
-
 		val := reflect.New(reflect.TypeOf(tt.value))
 		val.Elem().Set(reflect.ValueOf(tt.value))
 
 		field := val.Elem().Type().Field(0)
 
 		_, err := mapping(val, emptyField, formSource{field.Name: {tt.form}}, "form")
-		assert.NoError(t, err, testName)
+		assert.Equal(t, nil, err)
 
 		actual := val.Elem().Field(0).Interface()
-		assert.Equal(t, tt.expect, actual, testName)
+		assert.Equal(t, tt.expect, actual)
 	}
 }
 
@@ -67,7 +64,7 @@ func TestMappingDefault(t *testing.T) {
 		Array [1]int `form:",default=9"`
 	}
 	err := mappingByPtr(&s, formSource{}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	assert.Equal(t, 9, s.Int)
 	assert.Equal(t, []int{9}, s.Slice)
@@ -79,7 +76,7 @@ func TestMappingSkipField(t *testing.T) {
 		A int
 	}
 	err := mappingByPtr(&s, formSource{}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	assert.Equal(t, 0, s.A)
 }
@@ -90,7 +87,7 @@ func TestMappingIgnoreField(t *testing.T) {
 		B int `form:"-"`
 	}
 	err := mappingByPtr(&s, formSource{"A": {"9"}, "B": {"9"}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	assert.Equal(t, 9, s.A)
 	assert.Equal(t, 0, s.B)
@@ -102,7 +99,7 @@ func TestMappingUnexportedField(t *testing.T) {
 		b int `form:"b"`
 	}
 	err := mappingByPtr(&s, formSource{"a": {"9"}, "b": {"9"}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	assert.Equal(t, 9, s.A)
 	assert.Equal(t, 0, s.b)
@@ -113,7 +110,7 @@ func TestMappingPrivateField(t *testing.T) {
 		f int `form:"field"`
 	}
 	err := mappingByPtr(&s, formSource{"field": {"6"}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, int(0), s.f)
 }
 
@@ -123,7 +120,7 @@ func TestMappingUnknownFieldType(t *testing.T) {
 	}
 
 	err := mappingByPtr(&s, formSource{"U": {"unknown"}}, "form")
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 	assert.Equal(t, errUnknownType, err)
 }
 
@@ -132,7 +129,7 @@ func TestMappingURI(t *testing.T) {
 		F int `uri:"field"`
 	}
 	err := mapUri(&s, map[string][]string{"field": {"6"}})
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, int(6), s.F)
 }
 
@@ -141,7 +138,7 @@ func TestMappingForm(t *testing.T) {
 		F int `form:"field"`
 	}
 	err := mapForm(&s, map[string][]string{"field": {"6"}})
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, int(6), s.F)
 }
 
@@ -156,7 +153,7 @@ func TestMappingTime(t *testing.T) {
 
 	var err error
 	time.Local, err = time.LoadLocation("Europe/Berlin")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	err = mapForm(&s, map[string][]string{
 		"Time":      {"2019-01-20T16:02:58Z"},
@@ -165,7 +162,7 @@ func TestMappingTime(t *testing.T) {
 		"CSTTime":   {"2019-01-20"},
 		"UTCTime":   {"2019-01-20"},
 	})
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	assert.Equal(t, "2019-01-20 16:02:58 +0000 UTC", s.Time.String())
 	assert.Equal(t, "2019-01-20 00:00:00 +0100 CET", s.LocalTime.String())
@@ -180,14 +177,14 @@ func TestMappingTime(t *testing.T) {
 		Time time.Time `time_location:"wrong"`
 	}
 	err = mapForm(&wrongLoc, map[string][]string{"Time": {"2019-01-20T16:02:58Z"}})
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 
 	// wrong time value
 	var wrongTime struct {
 		Time time.Time
 	}
 	err = mapForm(&wrongTime, map[string][]string{"Time": {"wrong"}})
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 }
 
 func TestMapiingTimeDuration(t *testing.T) {
@@ -197,12 +194,12 @@ func TestMapiingTimeDuration(t *testing.T) {
 
 	// ok
 	err := mappingByPtr(&s, formSource{"D": {"5s"}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, 5*time.Second, s.D)
 
 	// error
 	err = mappingByPtr(&s, formSource{"D": {"wrong"}}, "form")
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 }
 
 func TestMappingSlice(t *testing.T) {
@@ -212,17 +209,17 @@ func TestMappingSlice(t *testing.T) {
 
 	// default value
 	err := mappingByPtr(&s, formSource{}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, []int{9}, s.Slice)
 
 	// ok
 	err = mappingByPtr(&s, formSource{"slice": {"3", "4"}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, []int{3, 4}, s.Slice)
 
 	// error
 	err = mappingByPtr(&s, formSource{"slice": {"wrong"}}, "form")
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 }
 
 func TestMappingArray(t *testing.T) {
@@ -232,20 +229,20 @@ func TestMappingArray(t *testing.T) {
 
 	// wrong default
 	err := mappingByPtr(&s, formSource{}, "form")
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 
 	// ok
 	err = mappingByPtr(&s, formSource{"array": {"3", "4"}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, [2]int{3, 4}, s.Array)
 
 	// error - not enough vals
 	err = mappingByPtr(&s, formSource{"array": {"3"}}, "form")
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 
 	// error - wrong value
 	err = mappingByPtr(&s, formSource{"array": {"wrong"}}, "form")
-	assert.Error(t, err)
+	assert.NotEqual(t, nil, err)
 }
 
 func TestMappingStructField(t *testing.T) {
@@ -256,7 +253,7 @@ func TestMappingStructField(t *testing.T) {
 	}
 
 	err := mappingByPtr(&s, formSource{"J": {`{"I": 9}`}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, 9, s.J.I)
 }
 
@@ -266,7 +263,7 @@ func TestMappingMapField(t *testing.T) {
 	}
 
 	err := mappingByPtr(&s, formSource{"M": {`{"one": 1}`}}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, map[string]int{"one": 1}, s.M)
 }
 
@@ -277,5 +274,5 @@ func TestMappingIgnoredCircularRef(t *testing.T) {
 	var s S
 
 	err := mappingByPtr(&s, formSource{}, "form")
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 }

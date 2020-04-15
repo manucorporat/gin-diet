@@ -8,8 +8,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/go-playground/assert"
 	"github.com/manucorporat/gin-diet/internal/json"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestError(t *testing.T) {
@@ -76,8 +76,8 @@ func TestErrorSlice(t *testing.T) {
 	assert.Equal(t, []string{"third"}, errs.ByType(ErrorTypePublic).Errors())
 	assert.Equal(t, []string{"first", "second"}, errs.ByType(ErrorTypePrivate).Errors())
 	assert.Equal(t, []string{"first", "second", "third"}, errs.ByType(ErrorTypePublic|ErrorTypePrivate).Errors())
-	assert.Empty(t, errs.ByType(ErrorTypeBind))
-	assert.Empty(t, errs.ByType(ErrorTypeBind).String())
+	assert.Equal(t, len(errs.ByType(ErrorTypeBind)), 0)
+	assert.Equal(t, len(errs.ByType(ErrorTypeBind).String()), 0)
 
 	assert.Equal(t, `Error #01: first
 Error #02: second
@@ -100,7 +100,7 @@ Error #03: third
 	assert.Equal(t, "{\"error\":\"first\"}", string(jsonBytes))
 
 	errs = errorMsgs{}
-	assert.Nil(t, errs.Last())
-	assert.Nil(t, errs.JSON())
-	assert.Empty(t, errs.String())
+	assert.Equal(t, nil, errs.Last())
+	assert.Equal(t, nil, errs.JSON())
+	assert.Equal(t, 0, len(errs.String()))
 }

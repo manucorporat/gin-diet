@@ -66,9 +66,9 @@ func SetMode(value string) {
 	modeName = value
 }
 
-// DisableBindValidation closes the default validator.
-func DisableBindValidation() {
-	binding.Validator = nil
+// SetValidator sets the default validator.
+func SetValidator(validator binding.StructValidator) {
+	binding.Validator = validator
 }
 
 // EnableJsonDecoderUseNumber sets true for binding.EnableDecoderUseNumber to

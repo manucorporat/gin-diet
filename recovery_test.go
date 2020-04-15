@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func TestPanicClean(t *testing.T) {
@@ -45,7 +45,7 @@ func TestPanicClean(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	// Check the buffer does not have the secret key
-	assert.NotContains(t, buffer.String(), password)
+	assert.Equal(t, strings.Contains(buffer.String(), password), false)
 }
 
 // TestPanicInHandler assert that panic has been recovered.
@@ -60,10 +60,10 @@ func TestPanicInHandler(t *testing.T) {
 	w := performRequest(router, "GET", "/recovery")
 	// TEST
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, buffer.String(), "panic recovered")
-	assert.Contains(t, buffer.String(), "Oupps, Houston, we have a problem")
-	assert.Contains(t, buffer.String(), "TestPanicInHandler")
-	assert.NotContains(t, buffer.String(), "GET /recovery")
+	Contains(t, buffer.String(), "panic recovered")
+	Contains(t, buffer.String(), "Oupps, Houston, we have a problem")
+	Contains(t, buffer.String(), "TestPanicInHandler")
+	assert.Equal(t, strings.Contains(buffer.String(), "GET /recovery"), false)
 
 	// Debug mode prints the request
 	SetMode(DebugMode)
@@ -71,7 +71,7 @@ func TestPanicInHandler(t *testing.T) {
 	w = performRequest(router, "GET", "/recovery")
 	// TEST
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, buffer.String(), "GET /recovery")
+	Contains(t, buffer.String(), "GET /recovery")
 
 	SetMode(TestMode)
 }
@@ -140,7 +140,7 @@ func TestPanicWithBrokenPipe(t *testing.T) {
 			w := performRequest(router, "GET", "/recovery")
 			// TEST
 			assert.Equal(t, expectCode, w.Code)
-			assert.Contains(t, strings.ToLower(buf.String()), expectMsg)
+			Contains(t, strings.ToLower(buf.String()), expectMsg)
 		})
 	}
 }

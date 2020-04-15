@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-playground/assert"
 	"github.com/manucorporat/gin-diet/binding"
-	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -37,25 +37,17 @@ func TestSetMode(t *testing.T) {
 	assert.Equal(t, testCode, ginMode)
 	assert.Equal(t, TestMode, Mode())
 
-	assert.Panics(t, func() { SetMode("unknown") })
-}
-
-func TestDisableBindValidation(t *testing.T) {
-	v := binding.Validator
-	assert.NotNil(t, binding.Validator)
-	DisableBindValidation()
-	assert.Nil(t, binding.Validator)
-	binding.Validator = v
+	Panics(t, func() { SetMode("unknown") })
 }
 
 func TestEnableJsonDecoderUseNumber(t *testing.T) {
-	assert.False(t, binding.EnableDecoderUseNumber)
+	assert.Equal(t, false, binding.EnableDecoderUseNumber)
 	EnableJsonDecoderUseNumber()
-	assert.True(t, binding.EnableDecoderUseNumber)
+	assert.Equal(t, true, binding.EnableDecoderUseNumber)
 }
 
 func TestEnableJsonDecoderDisallowUnknownFields(t *testing.T) {
-	assert.False(t, binding.EnableDecoderDisallowUnknownFields)
+	assert.Equal(t, false, binding.EnableDecoderDisallowUnknownFields)
 	EnableJsonDecoderDisallowUnknownFields()
-	assert.True(t, binding.EnableDecoderDisallowUnknownFields)
+	assert.Equal(t, true, binding.EnableDecoderDisallowUnknownFields)
 }

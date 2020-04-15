@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/go-playground/assert"
 )
 
 func TestReaderRenderNoHeaders(t *testing.T) {
@@ -19,5 +19,5 @@ func TestReaderRenderNoHeaders(t *testing.T) {
 		Reader:        strings.NewReader(content),
 	}
 	err := r.Render(httptest.NewRecorder())
-	require.NoError(t, err)
+	assert.Equal(t, err, nil)
 }

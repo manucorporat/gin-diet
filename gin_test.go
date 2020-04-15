@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func formatAsDate(t time.Time) string {
@@ -172,8 +172,8 @@ func init() {
 func TestCreateEngine(t *testing.T) {
 	router := New()
 	assert.Equal(t, "/", router.basePath)
-	assert.Equal(t, router.engine, router)
-	assert.Empty(t, router.Handlers)
+	assert.Equal(t, router.engine == router, true)
+	assert.Equal(t, 0, len(router.Handlers))
 }
 
 func TestLoadHTMLFilesTestMode(t *testing.T) {
@@ -287,35 +287,35 @@ func TestAddRoute(t *testing.T) {
 	router := New()
 	router.addRoute("GET", "/", HandlersChain{func(_ *Context) {}})
 
-	assert.Len(t, router.trees, 1)
-	assert.NotNil(t, router.trees.get("GET"))
-	assert.Nil(t, router.trees.get("POST"))
+	assert.Equal(t, len(router.trees), 1)
+	assert.NotEqual(t, nil, router.trees.get("GET"))
+	assert.Equal(t, nil, router.trees.get("POST"))
 
 	router.addRoute("POST", "/", HandlersChain{func(_ *Context) {}})
 
-	assert.Len(t, router.trees, 2)
-	assert.NotNil(t, router.trees.get("GET"))
-	assert.NotNil(t, router.trees.get("POST"))
+	assert.Equal(t, len(router.trees), 2)
+	assert.NotEqual(t, nil, router.trees.get("GET"))
+	assert.NotEqual(t, nil, router.trees.get("POST"))
 
 	router.addRoute("POST", "/post", HandlersChain{func(_ *Context) {}})
-	assert.Len(t, router.trees, 2)
+	assert.Equal(t, len(router.trees), 2)
 }
 
 func TestAddRouteFails(t *testing.T) {
 	router := New()
-	assert.Panics(t, func() { router.addRoute("", "/", HandlersChain{func(_ *Context) {}}) })
-	assert.Panics(t, func() { router.addRoute("GET", "a", HandlersChain{func(_ *Context) {}}) })
-	assert.Panics(t, func() { router.addRoute("GET", "/", HandlersChain{}) })
+	Panics(t, func() { router.addRoute("", "/", HandlersChain{func(_ *Context) {}}) })
+	Panics(t, func() { router.addRoute("GET", "a", HandlersChain{func(_ *Context) {}}) })
+	Panics(t, func() { router.addRoute("GET", "/", HandlersChain{}) })
 
 	router.addRoute("POST", "/post", HandlersChain{func(_ *Context) {}})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.addRoute("POST", "/post", HandlersChain{func(_ *Context) {}})
 	})
 }
 
 func TestCreateDefaultRouter(t *testing.T) {
 	router := Default()
-	assert.Len(t, router.Handlers, 2)
+	assert.Equal(t, len(router.Handlers), 2)
 }
 
 func TestNoRouteWithoutGlobalHandlers(t *testing.T) {
@@ -325,15 +325,15 @@ func TestNoRouteWithoutGlobalHandlers(t *testing.T) {
 	router := New()
 
 	router.NoRoute(middleware0)
-	assert.Nil(t, router.Handlers)
-	assert.Len(t, router.noRoute, 1)
-	assert.Len(t, router.allNoRoute, 1)
+	assert.Equal(t, nil, router.Handlers)
+	assert.Equal(t, len(router.noRoute), 1)
+	assert.Equal(t, len(router.allNoRoute), 1)
 	compareFunc(t, router.noRoute[0], middleware0)
 	compareFunc(t, router.allNoRoute[0], middleware0)
 
 	router.NoRoute(middleware1, middleware0)
-	assert.Len(t, router.noRoute, 2)
-	assert.Len(t, router.allNoRoute, 2)
+	assert.Equal(t, len(router.noRoute), 2)
+	assert.Equal(t, len(router.allNoRoute), 2)
 	compareFunc(t, router.noRoute[0], middleware1)
 	compareFunc(t, router.allNoRoute[0], middleware1)
 	compareFunc(t, router.noRoute[1], middleware0)
@@ -349,9 +349,9 @@ func TestNoRouteWithGlobalHandlers(t *testing.T) {
 	router.Use(middleware2)
 
 	router.NoRoute(middleware0)
-	assert.Len(t, router.allNoRoute, 2)
-	assert.Len(t, router.Handlers, 1)
-	assert.Len(t, router.noRoute, 1)
+	assert.Equal(t, len(router.allNoRoute), 2)
+	assert.Equal(t, len(router.Handlers), 1)
+	assert.Equal(t, len(router.noRoute), 1)
 
 	compareFunc(t, router.Handlers[0], middleware2)
 	compareFunc(t, router.noRoute[0], middleware0)
@@ -359,9 +359,9 @@ func TestNoRouteWithGlobalHandlers(t *testing.T) {
 	compareFunc(t, router.allNoRoute[1], middleware0)
 
 	router.Use(middleware1)
-	assert.Len(t, router.allNoRoute, 3)
-	assert.Len(t, router.Handlers, 2)
-	assert.Len(t, router.noRoute, 1)
+	assert.Equal(t, len(router.allNoRoute), 3)
+	assert.Equal(t, len(router.Handlers), 2)
+	assert.Equal(t, len(router.noRoute), 1)
 
 	compareFunc(t, router.Handlers[0], middleware2)
 	compareFunc(t, router.Handlers[1], middleware1)
@@ -378,15 +378,15 @@ func TestNoMethodWithoutGlobalHandlers(t *testing.T) {
 	router := New()
 
 	router.NoMethod(middleware0)
-	assert.Empty(t, router.Handlers)
-	assert.Len(t, router.noMethod, 1)
-	assert.Len(t, router.allNoMethod, 1)
+	assert.Equal(t, 0, len(router.Handlers))
+	assert.Equal(t, len(router.noMethod), 1)
+	assert.Equal(t, len(router.allNoMethod), 1)
 	compareFunc(t, router.noMethod[0], middleware0)
 	compareFunc(t, router.allNoMethod[0], middleware0)
 
 	router.NoMethod(middleware1, middleware0)
-	assert.Len(t, router.noMethod, 2)
-	assert.Len(t, router.allNoMethod, 2)
+	assert.Equal(t, len(router.noMethod), 2)
+	assert.Equal(t, len(router.allNoMethod), 2)
 	compareFunc(t, router.noMethod[0], middleware1)
 	compareFunc(t, router.allNoMethod[0], middleware1)
 	compareFunc(t, router.noMethod[1], middleware0)
@@ -406,9 +406,9 @@ func TestNoMethodWithGlobalHandlers(t *testing.T) {
 	router.Use(middleware2)
 
 	router.NoMethod(middleware0)
-	assert.Len(t, router.allNoMethod, 2)
-	assert.Len(t, router.Handlers, 1)
-	assert.Len(t, router.noMethod, 1)
+	assert.Equal(t, len(router.allNoMethod), 2)
+	assert.Equal(t, len(router.Handlers), 1)
+	assert.Equal(t, len(router.noMethod), 1)
 
 	compareFunc(t, router.Handlers[0], middleware2)
 	compareFunc(t, router.noMethod[0], middleware0)
@@ -416,9 +416,9 @@ func TestNoMethodWithGlobalHandlers(t *testing.T) {
 	compareFunc(t, router.allNoMethod[1], middleware0)
 
 	router.Use(middleware1)
-	assert.Len(t, router.allNoMethod, 3)
-	assert.Len(t, router.Handlers, 2)
-	assert.Len(t, router.noMethod, 1)
+	assert.Equal(t, len(router.allNoMethod), 3)
+	assert.Equal(t, len(router.Handlers), 2)
+	assert.Equal(t, len(router.noMethod), 1)
 
 	compareFunc(t, router.Handlers[0], middleware2)
 	compareFunc(t, router.Handlers[1], middleware1)
@@ -450,7 +450,7 @@ func TestListOfRoutes(t *testing.T) {
 
 	list := router.Routes()
 
-	assert.Len(t, list, 7)
+	assert.Equal(t, len(list), 7)
 	assertRoutePresent(t, list, RouteInfo{
 		Method:  "GET",
 		Path:    "/favicon.ico",
@@ -489,7 +489,7 @@ func TestEngineHandleContext(t *testing.T) {
 		v2.GET("/", func(c *Context) {})
 	}
 
-	assert.NotPanics(t, func() {
+	NotPanics(t, func() {
 		w := performRequest(r, "GET", "/")
 		assert.Equal(t, 301, w.Code)
 	})
@@ -507,10 +507,10 @@ func TestEngineHandleContextManyReEntries(t *testing.T) {
 	r.GET("/:count", func(c *Context) {
 		countStr := c.Param("count")
 		count, err := strconv.Atoi(countStr)
-		assert.NoError(t, err)
+		assert.Equal(t, nil, err)
 
 		n, err := c.Writer.Write([]byte("."))
-		assert.NoError(t, err)
+		assert.Equal(t, nil, err)
 		assert.Equal(t, 1, n)
 
 		switch {
@@ -522,7 +522,7 @@ func TestEngineHandleContextManyReEntries(t *testing.T) {
 		atomic.AddInt64(&handlerCounter, 1)
 	})
 
-	assert.NotPanics(t, func() {
+	NotPanics(t, func() {
 		w := performRequest(r, "GET", "/"+strconv.Itoa(expectValue-1)) // include 0 value
 		assert.Equal(t, 200, w.Code)
 		assert.Equal(t, expectValue, w.Body.Len())
@@ -535,7 +535,7 @@ func TestEngineHandleContextManyReEntries(t *testing.T) {
 func assertRoutePresent(t *testing.T, gotRoutes RoutesInfo, wantRoute RouteInfo) {
 	for _, gotRoute := range gotRoutes {
 		if gotRoute.Path == wantRoute.Path && gotRoute.Method == wantRoute.Method {
-			assert.Regexp(t, wantRoute.Handler, gotRoute.Handler)
+			assert.MatchRegex(t, wantRoute.Handler, gotRoute.Handler)
 			return
 		}
 	}

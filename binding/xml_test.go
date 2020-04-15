@@ -7,8 +7,7 @@ package binding
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/go-playground/assert"
 )
 
 func TestXMLBindingBindBody(t *testing.T) {
@@ -20,6 +19,6 @@ func TestXMLBindingBindBody(t *testing.T) {
    <foo>FOO</foo>
 </root>`
 	err := xmlBinding{}.BindBody([]byte(xmlBody), &s)
-	require.NoError(t, err)
+	assert.Equal(t, err, nil)
 	assert.Equal(t, "FOO", s.Foo)
 }

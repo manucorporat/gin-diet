@@ -10,8 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-playground/assert"
 	"github.com/manucorporat/gin-diet/binding"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestBindWith(t *testing.T) {
@@ -25,7 +25,7 @@ func TestBindWith(t *testing.T) {
 		Bar string `form:"bar"`
 	}
 	captureOutput(t, func() {
-		assert.NoError(t, c.BindWith(&obj, binding.Form))
+		assert.Equal(t, nil, c.BindWith(&obj, binding.Form))
 	})
 	assert.Equal(t, "foo", obj.Bar)
 	assert.Equal(t, "bar", obj.Foo)

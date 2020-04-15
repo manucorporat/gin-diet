@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 // TODO
@@ -39,7 +39,7 @@ func TestResponseWriterReset(t *testing.T) {
 	assert.Equal(t, testWriter, writer.ResponseWriter)
 	assert.Equal(t, -1, w.Size())
 	assert.Equal(t, http.StatusOK, w.Status())
-	assert.False(t, w.Written())
+	assert.Equal(t, false, w.Written())
 }
 
 func TestResponseWriterWriteHeader(t *testing.T) {
@@ -49,7 +49,7 @@ func TestResponseWriterWriteHeader(t *testing.T) {
 	w := ResponseWriter(writer)
 
 	w.WriteHeader(http.StatusMultipleChoices)
-	assert.False(t, w.Written())
+	assert.Equal(t, false, w.Written())
 	assert.Equal(t, http.StatusMultipleChoices, w.Status())
 	assert.NotEqual(t, http.StatusMultipleChoices, testWriter.Code)
 
@@ -66,7 +66,7 @@ func TestResponseWriterWriteHeadersNow(t *testing.T) {
 	w.WriteHeader(http.StatusMultipleChoices)
 	w.WriteHeaderNow()
 
-	assert.True(t, w.Written())
+	assert.Equal(t, true, w.Written())
 	assert.Equal(t, 0, w.Size())
 	assert.Equal(t, http.StatusMultipleChoices, testWriter.Code)
 
@@ -87,13 +87,13 @@ func TestResponseWriterWrite(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Status())
 	assert.Equal(t, http.StatusOK, testWriter.Code)
 	assert.Equal(t, "hola", testWriter.Body.String())
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 
 	n, err = w.Write([]byte(" adios"))
 	assert.Equal(t, 6, n)
 	assert.Equal(t, 10, w.Size())
 	assert.Equal(t, "hola adios", testWriter.Body.String())
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 }
 
 func TestResponseWriterHijack(t *testing.T) {
@@ -102,13 +102,13 @@ func TestResponseWriterHijack(t *testing.T) {
 	writer.reset(testWriter)
 	w := ResponseWriter(writer)
 
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		_, _, err := w.Hijack()
-		assert.NoError(t, err)
+		assert.Equal(t, nil, err)
 	})
-	assert.True(t, w.Written())
+	assert.Equal(t, true, w.Written())
 
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		w.CloseNotify()
 	})
 
@@ -127,6 +127,6 @@ func TestResponseWriterFlush(t *testing.T) {
 
 	// should return 500
 	resp, err := http.Get(testServer.URL)
-	assert.NoError(t, err)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 }

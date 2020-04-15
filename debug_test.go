@@ -15,7 +15,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 // TODO
@@ -24,11 +24,11 @@ import (
 
 func TestIsDebugging(t *testing.T) {
 	SetMode(DebugMode)
-	assert.True(t, IsDebugging())
+	assert.Equal(t, true, IsDebugging())
 	SetMode(ReleaseMode)
-	assert.False(t, IsDebugging())
+	assert.Equal(t, false, IsDebugging())
 	SetMode(TestMode)
-	assert.False(t, IsDebugging())
+	assert.Equal(t, false, IsDebugging())
 }
 
 func TestDebugPrint(t *testing.T) {
@@ -61,7 +61,7 @@ func TestDebugPrintRoutes(t *testing.T) {
 		debugPrintRoute("GET", "/path/to/route/:param", HandlersChain{func(c *Context) {}, handlerNameTest})
 		SetMode(TestMode)
 	})
-	assert.Regexp(t, `^\[GIN-debug\] GET    /path/to/route/:param     --> (.*/vendor/)?github.com/manucorporat/gin-diet.handlerNameTest \(2 handlers\)\n$`, re)
+	assert.MatchRegex(t, re, `^\[GIN-debug\] GET    /path/to/route/:param     --> (.*/vendor/)?github.com/manucorporat/gin-diet.handlerNameTest \(2 handlers\)\n$`)
 }
 
 func TestDebugPrintLoadTemplate(t *testing.T) {
@@ -71,7 +71,7 @@ func TestDebugPrintLoadTemplate(t *testing.T) {
 		debugPrintLoadTemplate(templ)
 		SetMode(TestMode)
 	})
-	assert.Regexp(t, `^\[GIN-debug\] Loaded HTML Templates \(2\): \n(\t- \n|\t- hello\.tmpl\n){2}\n`, re)
+	assert.MatchRegex(t, re, `^\[GIN-debug\] Loaded HTML Templates \(2\): \n(\t- \n|\t- hello\.tmpl\n){2}\n`)
 }
 
 func TestDebugPrintWARNINGSetHTMLTemplate(t *testing.T) {
@@ -128,7 +128,7 @@ func captureOutput(t *testing.T, f func()) string {
 		var buf bytes.Buffer
 		wg.Done()
 		_, err := io.Copy(&buf, reader)
-		assert.NoError(t, err)
+		assert.Equal(t, err, nil)
 		out <- buf.String()
 	}()
 	wg.Wait()
@@ -141,13 +141,13 @@ func TestGetMinVer(t *testing.T) {
 	var m uint64
 	var e error
 	_, e = getMinVer("go1")
-	assert.NotNil(t, e)
+	assert.NotEqual(t, nil, e)
 	m, e = getMinVer("go1.1")
 	assert.Equal(t, uint64(1), m)
-	assert.Nil(t, e)
+	assert.Equal(t, nil, e)
 	m, e = getMinVer("go1.1.1")
-	assert.Nil(t, e)
+	assert.Equal(t, nil, e)
 	assert.Equal(t, uint64(1), m)
 	_, e = getMinVer("go1.1.1.1")
-	assert.NotNil(t, e)
+	assert.NotEqual(t, nil, e)
 }

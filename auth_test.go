@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func TestBasicAuth(t *testing.T) {
@@ -20,24 +20,24 @@ func TestBasicAuth(t *testing.T) {
 		"bar":   "foo",
 	})
 
-	assert.Len(t, pairs, 3)
-	assert.Contains(t, pairs, authPair{
+	assert.Equal(t, len(pairs), 3)
+	assert.Equal(t, pairs[2], authPair{
 		user:  "bar",
 		value: "Basic YmFyOmZvbw==",
 	})
-	assert.Contains(t, pairs, authPair{
+	assert.Equal(t, pairs[1], authPair{
 		user:  "foo",
 		value: "Basic Zm9vOmJhcg==",
 	})
-	assert.Contains(t, pairs, authPair{
+	assert.Equal(t, pairs[0], authPair{
 		user:  "admin",
 		value: "Basic YWRtaW46cGFzc3dvcmQ=",
 	})
 }
 
 func TestBasicAuthFails(t *testing.T) {
-	assert.Panics(t, func() { processAccounts(nil) })
-	assert.Panics(t, func() {
+	Panics(t, func() { processAccounts(nil) })
+	Panics(t, func() {
 		processAccounts(Accounts{
 			"":    "password",
 			"foo": "bar",
@@ -54,27 +54,27 @@ func TestBasicAuthSearchCredential(t *testing.T) {
 
 	user, found := pairs.searchCredential(authorizationHeader("admin", "password"))
 	assert.Equal(t, "admin", user)
-	assert.True(t, found)
+	assert.Equal(t, found, true)
 
 	user, found = pairs.searchCredential(authorizationHeader("foo", "bar"))
 	assert.Equal(t, "foo", user)
-	assert.True(t, found)
+	assert.Equal(t, found, true)
 
 	user, found = pairs.searchCredential(authorizationHeader("bar", "foo"))
 	assert.Equal(t, "bar", user)
-	assert.True(t, found)
+	assert.Equal(t, found, true)
 
 	user, found = pairs.searchCredential(authorizationHeader("admins", "password"))
-	assert.Empty(t, user)
-	assert.False(t, found)
+	assert.Equal(t, len(user), 0)
+	assert.Equal(t, found, false)
 
 	user, found = pairs.searchCredential(authorizationHeader("foo", "bar "))
-	assert.Empty(t, user)
-	assert.False(t, found)
+	assert.Equal(t, len(user), 0)
+	assert.Equal(t, found, false)
 
 	user, found = pairs.searchCredential("")
-	assert.Empty(t, user)
-	assert.False(t, found)
+	assert.Equal(t, len(user), 0)
+	assert.Equal(t, found, false)
 }
 
 func TestBasicAuthAuthorizationHeader(t *testing.T) {
@@ -113,7 +113,7 @@ func TestBasicAuth401(t *testing.T) {
 	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("admin:password")))
 	router.ServeHTTP(w, req)
 
-	assert.False(t, called)
+	assert.Equal(t, called, false)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	assert.Equal(t, "Basic realm=\"Authorization Required\"", w.Header().Get("WWW-Authenticate"))
 }
@@ -133,7 +133,7 @@ func TestBasicAuth401WithCustomRealm(t *testing.T) {
 	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("admin:password")))
 	router.ServeHTTP(w, req)
 
-	assert.False(t, called)
+	assert.Equal(t, called, false)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	assert.Equal(t, "Basic realm=\"My Custom \\\"Realm\\\"\"", w.Header().Get("WWW-Authenticate"))
 }

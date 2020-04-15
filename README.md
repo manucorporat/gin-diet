@@ -2081,7 +2081,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
+
 )
 
 func TestPingRoute(t *testing.T) {

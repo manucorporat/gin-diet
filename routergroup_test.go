@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/go-playground/assert"
 )
 
 func init() {
@@ -20,16 +20,16 @@ func TestRouterGroupBasic(t *testing.T) {
 	group := router.Group("/hola", func(c *Context) {})
 	group.Use(func(c *Context) {})
 
-	assert.Len(t, group.Handlers, 2)
+	assert.Equal(t, len(group.Handlers), 2)
 	assert.Equal(t, "/hola", group.BasePath())
-	assert.Equal(t, router, group.engine)
+	assert.Equal(t, router == group.engine, true)
 
 	group2 := group.Group("manu")
 	group2.Use(func(c *Context) {}, func(c *Context) {})
 
-	assert.Len(t, group2.Handlers, 4)
+	assert.Equal(t, len(group2.Handlers), 4)
 	assert.Equal(t, "/hola/manu", group2.BasePath())
-	assert.Equal(t, router, group2.engine)
+	assert.Equal(t, router == group2.engine, true)
 }
 
 func TestRouterGroupBasicHandle(t *testing.T) {
@@ -91,22 +91,22 @@ func performRequestInGroup(t *testing.T, method string) {
 
 func TestRouterGroupInvalidStatic(t *testing.T) {
 	router := New()
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Static("/path/:param", "/")
 	})
 
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Static("/path/*param", "/")
 	})
 }
 
 func TestRouterGroupInvalidStaticFile(t *testing.T) {
 	router := New()
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.StaticFile("/path/:param", "favicon.ico")
 	})
 
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.StaticFile("/path/*param", "favicon.ico")
 	})
 }
@@ -117,35 +117,35 @@ func TestRouterGroupTooManyHandlers(t *testing.T) {
 	router.Use(handlers1...)
 
 	handlers2 := make([]HandlerFunc, 26)
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Use(handlers2...)
 	})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.GET("/", handlers2...)
 	})
 }
 
 func TestRouterGroupBadMethod(t *testing.T) {
 	router := New()
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Handle(http.MethodGet, "/")
 	})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Handle(" GET", "/")
 	})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Handle("GET ", "/")
 	})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Handle("", "/")
 	})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Handle("PO ST", "/")
 	})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Handle("1GET", "/")
 	})
-	assert.Panics(t, func() {
+	Panics(t, func() {
 		router.Handle("PATCh", "/")
 	})
 }
@@ -160,19 +160,19 @@ func TestRouterGroupPipeline(t *testing.T) {
 
 func testRoutesInterface(t *testing.T, r IRoutes) {
 	handler := func(c *Context) {}
-	assert.Equal(t, r, r.Use(handler))
+	assert.Equal(t, r == r.Use(handler), true)
 
-	assert.Equal(t, r, r.Handle(http.MethodGet, "/handler", handler))
-	assert.Equal(t, r, r.Any("/any", handler))
-	assert.Equal(t, r, r.GET("/", handler))
-	assert.Equal(t, r, r.POST("/", handler))
-	assert.Equal(t, r, r.DELETE("/", handler))
-	assert.Equal(t, r, r.PATCH("/", handler))
-	assert.Equal(t, r, r.PUT("/", handler))
-	assert.Equal(t, r, r.OPTIONS("/", handler))
-	assert.Equal(t, r, r.HEAD("/", handler))
+	assert.Equal(t, r == r.Handle(http.MethodGet, "/handler", handler), true)
+	assert.Equal(t, true, r == r.Any("/any", handler))
+	assert.Equal(t, true, r == r.GET("/", handler))
+	assert.Equal(t, true, r == r.POST("/", handler))
+	assert.Equal(t, true, r == r.DELETE("/", handler))
+	assert.Equal(t, true, r == r.PATCH("/", handler))
+	assert.Equal(t, true, r == r.PUT("/", handler))
+	assert.Equal(t, true, r == r.OPTIONS("/", handler))
+	assert.Equal(t, true, r == r.HEAD("/", handler))
 
-	assert.Equal(t, r, r.StaticFile("/file", "."))
-	assert.Equal(t, r, r.Static("/static", "."))
-	assert.Equal(t, r, r.StaticFS("/static2", Dir(".", false)))
+	assert.Equal(t, true, r == r.StaticFile("/file", "."))
+	assert.Equal(t, true, r == r.Static("/static", "."))
+	assert.Equal(t, true, r == r.StaticFS("/static2", Dir(".", false)))
 }
