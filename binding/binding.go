@@ -2,8 +2,6 @@
 // Use of this source code is governed by a MIT style
 // license that can be found in the LICENSE file.
 
-// +build !nomsgpack
-
 package binding
 
 import "net/http"
@@ -17,10 +15,6 @@ const (
 	MIMEPlain             = "text/plain"
 	MIMEPOSTForm          = "application/x-www-form-urlencoded"
 	MIMEMultipartPOSTForm = "multipart/form-data"
-	MIMEPROTOBUF          = "application/x-protobuf"
-	MIMEMSGPACK           = "application/x-msgpack"
-	MIMEMSGPACK2          = "application/msgpack"
-	MIMEYAML              = "application/x-yaml"
 )
 
 // Binding describes the interface which needs to be implemented for binding the
@@ -65,7 +59,12 @@ type StructValidator interface {
 // Validator is the default validator which implements the StructValidator
 // interface. It uses https://github.com/go-playground/validator/tree/v8.18.2
 // under the hood.
-var Validator StructValidator = &defaultValidator{}
+var Validator StructValidator = nil
+
+// SetValidator configures a new validator for the bindings package, defaults to nil.
+func SetValidator(newValidator StructValidator) {
+	Validator = newValidator
+}
 
 // These implement the Binding interface and can be used to bind the data
 // present in the request to struct instances.
@@ -76,9 +75,6 @@ var (
 	Query         = queryBinding{}
 	FormPost      = formPostBinding{}
 	FormMultipart = formMultipartBinding{}
-	ProtoBuf      = protobufBinding{}
-	MsgPack       = msgpackBinding{}
-	YAML          = yamlBinding{}
 	Uri           = uriBinding{}
 	Header        = headerBinding{}
 )
@@ -95,12 +91,6 @@ func Default(method, contentType string) Binding {
 		return JSON
 	case MIMEXML, MIMEXML2:
 		return XML
-	case MIMEPROTOBUF:
-		return ProtoBuf
-	case MIMEMSGPACK, MIMEMSGPACK2:
-		return MsgPack
-	case MIMEYAML:
-		return YAML
 	case MIMEMultipartPOSTForm:
 		return FormMultipart
 	default: // case MIMEPOSTForm:

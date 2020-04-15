@@ -1,4 +1,4 @@
-# Gin Web Framework
+# Gin Diet
 
 <img align="right" width="159px" src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png">
 
@@ -48,7 +48,7 @@ Gin is a web framework written in Go (Golang). It features a martini-like API wi
     - [Bind Header](#bind-header)
     - [Bind HTML checkboxes](#bind-html-checkboxes)
     - [Multipart/Urlencoded binding](#multiparturlencoded-binding)
-    - [XML, JSON, YAML and ProtoBuf rendering](#xml-json-yaml-and-protobuf-rendering)
+    - [XML, JSON rendering](#xml-json-rendering)
       - [SecureJSON](#securejson)
       - [JSONP](#jsonp)
       - [AsciiJSON](#asciijson)
@@ -90,7 +90,7 @@ $ go get -u github.com/gin-gonic/gin
 2. Import it in your code:
 
 ```go
-import "github.com/gin-gonic/gin"
+import "github.com/manucorporat/gin-diet"
 ```
 
 3. (Optional) Import `net/http`. This is required for example if using constants such as `http.StatusOK`.
@@ -100,7 +100,7 @@ import "net/http"
 ```
 
 ## Quick start
- 
+
 ```sh
 # assume the following codes in example.go file
 $ cat example.go
@@ -109,7 +109,7 @@ $ cat example.go
 ```go
 package main
 
-import "github.com/gin-gonic/gin"
+import "github.com/manucorporat/gin-diet"
 
 func main() {
 	r := gin.Default()
@@ -549,44 +549,44 @@ func main() {
 ::1 - [Fri, 07 Dec 2018 17:04:38 JST] "GET /ping HTTP/1.1 200 122.767µs "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36" "
 ```
 
-### Controlling Log output coloring 
+### Controlling Log output coloring
 
 By default, logs output on console should be colorized depending on the detected TTY.
 
-Never colorize logs: 
+Never colorize logs:
 
 ```go
 func main() {
     // Disable log's color
     gin.DisableConsoleColor()
-    
+
     // Creates a gin router with default middleware:
     // logger and recovery (crash-free) middleware
     router := gin.Default()
-    
+
     router.GET("/ping", func(c *gin.Context) {
         c.String(200, "pong")
     })
-    
+
     router.Run(":8080")
 }
 ```
 
-Always colorize logs: 
+Always colorize logs:
 
 ```go
 func main() {
     // Force log's color
     gin.ForceConsoleColor()
-    
+
     // Creates a gin router with default middleware:
     // logger and recovery (crash-free) middleware
     router := gin.Default()
-    
+
     router.GET("/ping", func(c *gin.Context) {
         c.String(200, "pong")
     })
-    
+
     router.Run(":8080")
 }
 ```
@@ -628,12 +628,12 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		
+
 		if json.User != "manu" || json.Password != "123" {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
 			return
-		} 
-		
+		}
+
 		c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
 	})
 
@@ -649,12 +649,12 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		
+
 		if xml.User != "manu" || xml.Password != "123" {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
 			return
-		} 
-		
+		}
+
 		c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
 	})
 
@@ -666,12 +666,12 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		
+
 		if form.User != "manu" || form.Password != "123" {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
 			return
-		} 
-		
+		}
+
 		c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
 	})
 
@@ -717,8 +717,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/manucorporat/gin-diet"
+	"github.com/manucorporat/gin-diet/binding"
 	"gopkg.in/go-playground/validator.v10"
 )
 
@@ -781,7 +781,7 @@ package main
 import (
 	"log"
 
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 )
 
 type Person struct {
@@ -818,7 +818,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 )
 
 type Person struct {
@@ -864,7 +864,7 @@ See the [detail information](https://github.com/gin-gonic/gin/issues/846).
 ```go
 package main
 
-import "github.com/gin-gonic/gin"
+import "github.com/manucorporat/gin-diet"
 
 type Person struct {
 	ID string `uri:"id" binding:"required,uuid"`
@@ -898,7 +898,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 )
 
 type testHeader struct {
@@ -1017,7 +1017,7 @@ Test it with:
 $ curl -X POST -v --form name=user --form "avatar=@./avatar.png" http://localhost:8080/profile
 ```
 
-### XML, JSON, YAML and ProtoBuf rendering
+### XML, JSON
 
 ```go
 func main() {
@@ -1045,23 +1045,6 @@ func main() {
 
 	r.GET("/someXML", func(c *gin.Context) {
 		c.XML(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
-	})
-
-	r.GET("/someYAML", func(c *gin.Context) {
-		c.YAML(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
-	})
-
-	r.GET("/someProtoBuf", func(c *gin.Context) {
-		reps := []int64{int64(1), int64(2)}
-		label := "test"
-		// The specific definition of protobuf is written in the testdata/protoexample file.
-		data := &protoexample.Test{
-			Label: &label,
-			Reps:  reps,
-		}
-		// Note that data becomes binary data in the response
-		// Will output protoexample.Test protobuf serialized data
-		c.ProtoBuf(http.StatusOK, data)
 	})
 
 	// Listen and serve on 0.0.0.0:8080
@@ -1103,7 +1086,7 @@ func main() {
 		data := gin.H{
 			"foo": "bar",
 		}
-		
+
 		//callback is x
 		// Will output  :   x({\"foo\":\"bar\"})
 		c.JSONP(http.StatusOK, data)
@@ -1148,21 +1131,21 @@ This feature is unavailable in Go 1.6 and lower.
 ```go
 func main() {
 	r := gin.Default()
-	
+
 	// Serves unicode entities
 	r.GET("/json", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"html": "<b>Hello, world!</b>",
 		})
 	})
-	
+
 	// Serves literal characters
 	r.GET("/purejson", func(c *gin.Context) {
 		c.PureJSON(200, gin.H{
 			"html": "<b>Hello, world!</b>",
 		})
 	})
-	
+
 	// listen and serve on 0.0.0.0:8080
 	r.Run(":8080")
 }
@@ -1336,7 +1319,7 @@ import (
     "net/http"
     "time"
 
-    "github.com/gin-gonic/gin"
+    "github.com/manucorporat/gin-diet"
 )
 
 func formatAsDate(t time.Time) string {
@@ -1552,7 +1535,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/autotls"
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 )
 
 func main() {
@@ -1576,7 +1559,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/autotls"
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -1610,7 +1593,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -1726,7 +1709,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 )
 
 func main() {
@@ -1766,7 +1749,7 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
 	}
-	
+
 	log.Println("Server exiting")
 }
 ```
@@ -1943,8 +1926,7 @@ func SomeHandler(c *gin.Context) {
 * `c.ShouldBindBodyWith` stores body into the context before binding. This has
 a slight impact to performance, so you should not use this method if you are
 enough to call binding at once.
-* This feature is only needed for some formats -- `JSON`, `XML`, `MsgPack`,
-`ProtoBuf`. For other formats, `Query`, `Form`, `FormPost`, `FormMultipart`,
+* This feature is only needed for some formats -- `JSON`, `XML`. For other formats, `Query`, `Form`, `FormPost`, `FormMultipart`,
 can be called by `c.ShouldBind()` multiple times without any damage to
 performance (See [#1341](https://github.com/gin-gonic/gin/pull/1341)).
 
@@ -1959,7 +1941,7 @@ import (
 	"html/template"
 	"log"
 
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 )
 
 var html = template.Must(template.New("https").Parse(`
@@ -2012,7 +1994,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/manucorporat/gin-diet"
 )
 
 func main() {
@@ -2044,7 +2026,7 @@ func main() {
 import (
     "fmt"
 
-    "github.com/gin-gonic/gin"
+    "github.com/manucorporat/gin-diet"
 )
 
 func main() {

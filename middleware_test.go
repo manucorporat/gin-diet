@@ -7,10 +7,8 @@ package gin
 import (
 	"errors"
 	"net/http"
-	"strings"
 	"testing"
 
-	"github.com/gin-contrib/sse"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -221,30 +219,4 @@ func TestMiddlewareFailHandlersChain(t *testing.T) {
 	// TEST
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Equal(t, "A", signature)
-}
-
-func TestMiddlewareWrite(t *testing.T) {
-	router := New()
-	router.Use(func(c *Context) {
-		c.String(http.StatusBadRequest, "hola\n")
-	})
-	router.Use(func(c *Context) {
-		c.XML(http.StatusBadRequest, H{"foo": "bar"})
-	})
-	router.Use(func(c *Context) {
-		c.JSON(http.StatusBadRequest, H{"foo": "bar"})
-	})
-	router.GET("/", func(c *Context) {
-		c.JSON(http.StatusBadRequest, H{"foo": "bar"})
-	}, func(c *Context) {
-		c.Render(http.StatusBadRequest, sse.Event{
-			Event: "test",
-			Data:  "message",
-		})
-	})
-
-	w := performRequest(router, "GET", "/")
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Equal(t, strings.Replace("hola\n<map><foo>bar</foo></map>{\"foo\":\"bar\"}{\"foo\":\"bar\"}event:test\ndata:message\n\n", " ", "", -1), strings.Replace(w.Body.String(), " ", "", -1))
 }

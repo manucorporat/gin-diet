@@ -21,15 +21,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-contrib/sse"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/golang/protobuf/proto"
+	"github.com/manucorporat/gin-diet/binding"
+	"github.com/manucorporat/gin-diet/binding/validator"
 	"github.com/stretchr/testify/assert"
-
-	testdata "github.com/gin-gonic/gin/testdata/protoexample"
 )
 
 var _ context.Context = &Context{}
+
+func init() {
+	binding.SetValidator(validator.New())
+}
 
 // Unit tests TODO
 // func (c *Context) File(filepath string) {
@@ -341,7 +342,7 @@ func TestContextHandlerName(t *testing.T) {
 	c, _ := CreateTestContext(httptest.NewRecorder())
 	c.handlers = HandlersChain{func(c *Context) {}, handlerNameTest}
 
-	assert.Regexp(t, "^(.*/vendor/)?github.com/gin-gonic/gin.handlerNameTest$", c.HandlerName())
+	assert.Regexp(t, "^(.*/vendor/)?github.com/manucorporat/gin-diet.handlerNameTest$", c.HandlerName())
 }
 
 func TestContextHandlerNames(t *testing.T) {
@@ -352,7 +353,7 @@ func TestContextHandlerNames(t *testing.T) {
 
 	assert.True(t, len(names) == 4)
 	for _, name := range names {
-		assert.Regexp(t, `^(.*/vendor/)?(github\.com/gin-gonic/gin\.){1}(TestContextHandlerNames\.func.*){0,1}(handlerNameTest.*){0,1}`, name)
+		assert.Regexp(t, `^(.*/vendor/)?(github\.com/manucorporat/gin-diet\.){1}(TestContextHandlerNames\.func.*){0,1}(handlerNameTest.*){0,1}`, name)
 	}
 }
 
@@ -965,23 +966,6 @@ func TestContextRenderNoContentData(t *testing.T) {
 	assert.Equal(t, "text/csv", w.Header().Get("Content-Type"))
 }
 
-func TestContextRenderSSE(t *testing.T) {
-	w := httptest.NewRecorder()
-	c, _ := CreateTestContext(w)
-
-	c.SSEvent("float", 1.5)
-	c.Render(-1, sse.Event{
-		Id:   "123",
-		Data: "text",
-	})
-	c.SSEvent("chat", H{
-		"foo": "bar",
-		"bar": "foo",
-	})
-
-	assert.Equal(t, strings.Replace(w.Body.String(), " ", "", -1), strings.Replace("event:float\ndata:1.5\n\nid:123\ndata:text\n\nevent:chat\ndata:{\"bar\":\"foo\",\"foo\":\"bar\"}\n\n", " ", "", -1))
-}
-
 func TestContextRenderFile(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := CreateTestContext(w)
@@ -1018,43 +1002,6 @@ func TestContextRenderAttachment(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	assert.Contains(t, w.Body.String(), "func New() *Engine {")
 	assert.Equal(t, fmt.Sprintf("attachment; filename=\"%s\"", newFilename), w.HeaderMap.Get("Content-Disposition"))
-}
-
-// TestContextRenderYAML tests that the response is serialized as YAML
-// and Content-Type is set to application/x-yaml
-func TestContextRenderYAML(t *testing.T) {
-	w := httptest.NewRecorder()
-	c, _ := CreateTestContext(w)
-
-	c.YAML(http.StatusCreated, H{"foo": "bar"})
-
-	assert.Equal(t, http.StatusCreated, w.Code)
-	assert.Equal(t, "foo: bar\n", w.Body.String())
-	assert.Equal(t, "application/x-yaml; charset=utf-8", w.Header().Get("Content-Type"))
-}
-
-// TestContextRenderProtoBuf tests that the response is serialized as ProtoBuf
-// and Content-Type is set to application/x-protobuf
-// and we just use the example protobuf to check if the response is correct
-func TestContextRenderProtoBuf(t *testing.T) {
-	w := httptest.NewRecorder()
-	c, _ := CreateTestContext(w)
-
-	reps := []int64{int64(1), int64(2)}
-	label := "test"
-	data := &testdata.Test{
-		Label: &label,
-		Reps:  reps,
-	}
-
-	c.ProtoBuf(http.StatusCreated, data)
-
-	protoData, err := proto.Marshal(data)
-	assert.NoError(t, err)
-
-	assert.Equal(t, http.StatusCreated, w.Code)
-	assert.Equal(t, string(protoData), w.Body.String())
-	assert.Equal(t, "application/x-protobuf", w.Header().Get("Content-Type"))
 }
 
 func TestContextHeaders(t *testing.T) {
@@ -1129,7 +1076,7 @@ func TestContextNegotiationWithJSON(t *testing.T) {
 	c.Request, _ = http.NewRequest("POST", "", nil)
 
 	c.Negotiate(http.StatusOK, Negotiate{
-		Offered: []string{MIMEJSON, MIMEXML, MIMEYAML},
+		Offered: []string{MIMEJSON, MIMEXML},
 		Data:    H{"foo": "bar"},
 	})
 
@@ -1144,7 +1091,7 @@ func TestContextNegotiationWithXML(t *testing.T) {
 	c.Request, _ = http.NewRequest("POST", "", nil)
 
 	c.Negotiate(http.StatusOK, Negotiate{
-		Offered: []string{MIMEXML, MIMEJSON, MIMEYAML},
+		Offered: []string{MIMEXML, MIMEJSON},
 		Data:    H{"foo": "bar"},
 	})
 
@@ -1489,23 +1436,6 @@ func TestContextBindWithQuery(t *testing.T) {
 	assert.Equal(t, 0, w.Body.Len())
 }
 
-func TestContextBindWithYAML(t *testing.T) {
-	w := httptest.NewRecorder()
-	c, _ := CreateTestContext(w)
-
-	c.Request, _ = http.NewRequest("POST", "/", bytes.NewBufferString("foo: bar\nbar: foo"))
-	c.Request.Header.Add("Content-Type", MIMEXML) // set fake content-type
-
-	var obj struct {
-		Foo string `yaml:"foo"`
-		Bar string `yaml:"bar"`
-	}
-	assert.NoError(t, c.BindYAML(&obj))
-	assert.Equal(t, "foo", obj.Bar)
-	assert.Equal(t, "bar", obj.Foo)
-	assert.Equal(t, 0, w.Body.Len())
-}
-
 func TestContextBadAutoBind(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := CreateTestContext(w)
@@ -1619,23 +1549,6 @@ func TestContextShouldBindWithQuery(t *testing.T) {
 	assert.Equal(t, "bar", obj.Foo)
 	assert.Equal(t, "foo1", obj.Bar1)
 	assert.Equal(t, "bar1", obj.Foo1)
-	assert.Equal(t, 0, w.Body.Len())
-}
-
-func TestContextShouldBindWithYAML(t *testing.T) {
-	w := httptest.NewRecorder()
-	c, _ := CreateTestContext(w)
-
-	c.Request, _ = http.NewRequest("POST", "/", bytes.NewBufferString("foo: bar\nbar: foo"))
-	c.Request.Header.Add("Content-Type", MIMEXML) // set fake content-type
-
-	var obj struct {
-		Foo string `yaml:"foo"`
-		Bar string `yaml:"bar"`
-	}
-	assert.NoError(t, c.ShouldBindYAML(&obj))
-	assert.Equal(t, "foo", obj.Bar)
-	assert.Equal(t, "bar", obj.Foo)
 	assert.Equal(t, 0, w.Body.Len())
 }
 

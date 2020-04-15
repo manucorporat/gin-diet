@@ -19,9 +19,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-contrib/sse"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/gin-gonic/gin/render"
+	"github.com/manucorporat/gin-diet/binding"
+	"github.com/manucorporat/gin-diet/render"
 )
 
 // Content-Type MIME of the most common data formats.
@@ -33,7 +32,6 @@ const (
 	MIMEPlain             = binding.MIMEPlain
 	MIMEPOSTForm          = binding.MIMEPOSTForm
 	MIMEMultipartPOSTForm = binding.MIMEMultipartPOSTForm
-	MIMEYAML              = binding.MIMEYAML
 	BodyBytesKey          = "_gin-gonic/gin/bodybyteskey"
 )
 
@@ -598,11 +596,6 @@ func (c *Context) BindQuery(obj interface{}) error {
 	return c.MustBindWith(obj, binding.Query)
 }
 
-// BindYAML is a shortcut for c.MustBindWith(obj, binding.YAML).
-func (c *Context) BindYAML(obj interface{}) error {
-	return c.MustBindWith(obj, binding.YAML)
-}
-
 // BindHeader is a shortcut for c.MustBindWith(obj, binding.Header).
 func (c *Context) BindHeader(obj interface{}) error {
 	return c.MustBindWith(obj, binding.Header)
@@ -655,11 +648,6 @@ func (c *Context) ShouldBindXML(obj interface{}) error {
 // ShouldBindQuery is a shortcut for c.ShouldBindWith(obj, binding.Query).
 func (c *Context) ShouldBindQuery(obj interface{}) error {
 	return c.ShouldBindWith(obj, binding.Query)
-}
-
-// ShouldBindYAML is a shortcut for c.ShouldBindWith(obj, binding.YAML).
-func (c *Context) ShouldBindYAML(obj interface{}) error {
-	return c.ShouldBindWith(obj, binding.YAML)
 }
 
 // ShouldBindHeader is a shortcut for c.ShouldBindWith(obj, binding.Header).
@@ -905,16 +893,6 @@ func (c *Context) XML(code int, obj interface{}) {
 	c.Render(code, render.XML{Data: obj})
 }
 
-// YAML serializes the given struct as YAML into the response body.
-func (c *Context) YAML(code int, obj interface{}) {
-	c.Render(code, render.YAML{Data: obj})
-}
-
-// ProtoBuf serializes the given struct as ProtoBuf into the response body.
-func (c *Context) ProtoBuf(code int, obj interface{}) {
-	c.Render(code, render.ProtoBuf{Data: obj})
-}
-
 // String writes the given string into the response body.
 func (c *Context) String(code int, format string, values ...interface{}) {
 	c.Render(code, render.String{Format: format, Data: values})
@@ -970,14 +948,6 @@ func (c *Context) FileAttachment(filepath, filename string) {
 	http.ServeFile(c.Writer, c.Request, filepath)
 }
 
-// SSEvent writes a Server-Sent Event into the body stream.
-func (c *Context) SSEvent(name string, message interface{}) {
-	c.Render(-1, sse.Event{
-		Event: name,
-		Data:  message,
-	})
-}
-
 // Stream sends a streaming response and returns a boolean
 // indicates "Is client disconnected in middle of stream"
 func (c *Context) Stream(step func(w io.Writer) bool) bool {
@@ -1026,10 +996,6 @@ func (c *Context) Negotiate(code int, config Negotiate) {
 	case binding.MIMEXML:
 		data := chooseData(config.XMLData, config.Data)
 		c.XML(code, data)
-
-	case binding.MIMEYAML:
-		data := chooseData(config.YAMLData, config.Data)
-		c.YAML(code, data)
 
 	default:
 		c.AbortWithError(http.StatusNotAcceptable, errors.New("the accepted formats are not offered by the server")) // nolint: errcheck
