@@ -1,6 +1,6 @@
 module github.com/manucorporat/gin-diet
 
-go 2.0
+go 1.14
 
 require (
 	github.com/go-playground/validator/v10 v10.2.0
